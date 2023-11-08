@@ -19,19 +19,28 @@ impl State {
     }
 
     pub fn render(&self, buffer: &mut [u32], screen_size: impl Into<Vector2<NonZeroU32>>) {
+        fn set_pixel(
+            screen_pos: &Vector2<u32>,
+            screen_size: &Vector2<u32>,
+            red: u32,
+            green: u32,
+            blue: u32,
+            buffer: &mut [u32],
+        ) {
+            let index = screen_pos.y as usize * screen_size.x as usize + screen_pos.x as usize;
+            buffer[index] = blue | (green << 8) | (red << 16);
+        }
+
         let screen_size = screen_size.into().map(|x| x.get());
         assert_eq!(buffer.len(), (screen_size.x * screen_size.y) as usize);
 
-        for x in 0..screen_size.x {
-            for y in 0..screen_size.y {
-                let red = x % 255;
-                let green = y % 255;
-                let blue = (x * y) % 255;
+        PixelIterator::new(screen_size).for_each(|screen_pos| {
+            let red = screen_pos.x % 255;
+            let green = screen_pos.y % 255;
+            let blue = (screen_pos.x * screen_pos.y) % 255;
 
-                let index = y as usize * screen_size.x as usize + x as usize;
-                buffer[index] = blue | (green << 8) | (red << 16);
-            }
-        }
+            set_pixel(&screen_pos, &screen_size, red, green, blue, buffer);
+        });
     }
 }
 
@@ -56,5 +65,46 @@ impl Camera {
     fn calc_ratio(new_screen_size: impl Into<Vector2<NonZeroU32>>) -> f64 {
         let new_screen_size = new_screen_size.into().map(|x| x.get() as f64);
         new_screen_size.x / new_screen_size.y
+    }
+}
+
+struct PixelIterator {
+    screen_size: Vector2<u32>,
+    x: u32,
+    y: u32,
+}
+
+impl PixelIterator {
+    pub fn new(screen_size: impl Into<Vector2<u32>>) -> Self {
+        Self {
+            screen_size: screen_size.into(),
+            x: 0,
+            y: 0,
+        }
+    }
+}
+
+impl Iterator for PixelIterator {
+    type Item = Vector2<u32>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let out = Vector2::new(self.x, self.y);
+
+        self.x += 1;
+        if self.x >= self.screen_size.x {
+            self.x = 0;
+            self.y += 1;
+        }
+
+        if self.y >= self.screen_size.y {
+            None
+        } else {
+            Some(out)
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let estimate = self.screen_size.x as usize * self.screen_size.y as usize;
+        (estimate, Some(estimate))
     }
 }
