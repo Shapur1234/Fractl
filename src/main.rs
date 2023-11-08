@@ -1,9 +1,14 @@
-use std::num::NonZeroU32;
-use std::rc::Rc;
-use winit::event::{Event, KeyEvent, WindowEvent};
-use winit::event_loop::{ControlFlow, EventLoop};
-use winit::keyboard::{Key, NamedKey};
-use winit::window::WindowBuilder;
+mod state;
+
+use cgmath::Vector2;
+use state::State;
+use std::{num::NonZeroU32, rc::Rc};
+use winit::{
+    event::{Event, KeyEvent, WindowEvent},
+    event_loop::{ControlFlow, EventLoop},
+    keyboard::{Key, NamedKey},
+    window::WindowBuilder,
+};
 
 fn main() {
     let event_loop = EventLoop::new().unwrap();
@@ -12,6 +17,8 @@ fn main() {
     #[cfg(target_arch = "wasm32")]
     {
         use winit::platform::web::WindowExtWebSys;
+
+        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
         web_sys::window()
             .unwrap()
@@ -26,6 +33,14 @@ fn main() {
     let context = softbuffer::Context::new(window.clone()).unwrap();
     let mut surface = softbuffer::Surface::new(&context, window.clone()).unwrap();
 
+    let mut state = State::new({
+        let size = window.inner_size();
+        (
+            NonZeroU32::new(size.width).unwrap_or(NonZeroU32::new(640).unwrap()),
+            NonZeroU32::new(size.height).unwrap_or(NonZeroU32::new(360).unwrap()),
+        )
+    });
+
     event_loop
         .run(move |event, elwt| {
             elwt.set_control_flow(ControlFlow::Wait);
@@ -35,24 +50,24 @@ fn main() {
                     window_id,
                     event: WindowEvent::RedrawRequested,
                 } if window_id == window.id() => {
-                    if let (Some(width), Some(height)) = {
+                    if let (Some(screen_width), Some(screen_height)) = {
                         let size = window.inner_size();
                         (NonZeroU32::new(size.width), NonZeroU32::new(size.height))
                     } {
-                        surface.resize(width, height).unwrap();
+                        let screen_size = Vector2::new(screen_width, screen_height);
 
-                        let mut buffer = surface.buffer_mut().unwrap();
-                        for y in 0..height.get() {
-                            for x in 0..width.get() {
-                                let red = x % 255;
-                                let green = y % 255;
-                                let blue = (x * y) % 255;
-                                let index = y as usize * width.get() as usize + x as usize;
-                                buffer[index] = blue | (green << 8) | (red << 16);
-                            }
+                        {
+                            surface.resize(screen_size.x, screen_size.y).unwrap();
+                            state.resize(screen_size);
                         }
 
-                        buffer.present().unwrap();
+                        {
+                            let mut buffer = surface.buffer_mut().unwrap();
+
+                            state.render(&mut buffer, screen_size);
+
+                            buffer.present().unwrap();
+                        }
                     }
                 }
                 Event::WindowEvent {

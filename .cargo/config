@@ -1,2 +1,3 @@
 [alias]
+r-wasm = "run --release --package run-wasm -- --package fractaller"
 run-wasm = "run --release --package run-wasm --"
