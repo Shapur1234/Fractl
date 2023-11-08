@@ -1,7 +1,8 @@
 mod state;
 
+use crate::state::State;
+
 use cgmath::Vector2;
-use state::State;
 use std::{num::NonZeroU32, rc::Rc};
 use winit::{
     event::{Event, KeyEvent, WindowEvent},
@@ -35,7 +36,7 @@ fn main() {
 
     let mut state = State::new({
         let size = window.inner_size();
-        (
+        Vector2::new(
             NonZeroU32::new(size.width).unwrap_or(NonZeroU32::new(640).unwrap()),
             NonZeroU32::new(size.height).unwrap_or(NonZeroU32::new(360).unwrap()),
         )

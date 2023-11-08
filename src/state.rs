@@ -19,29 +19,37 @@ impl State {
     }
 
     pub fn render(&self, buffer: &mut [u32], screen_size: impl Into<Vector2<NonZeroU32>>) {
-        fn set_pixel(
-            screen_pos: &Vector2<u32>,
-            screen_size: &Vector2<u32>,
-            red: u32,
-            green: u32,
-            blue: u32,
-            buffer: &mut [u32],
-        ) {
-            let index = screen_pos.y as usize * screen_size.x as usize + screen_pos.x as usize;
-            buffer[index] = blue | (green << 8) | (red << 16);
+        fn rgb_to_u32(red: u32, green: u32, blue: u32) -> u32 {
+            blue | (green << 8) | (red << 16)
         }
 
         let screen_size = screen_size.into().map(|x| x.get());
         assert_eq!(buffer.len(), (screen_size.x * screen_size.y) as usize);
 
-        PixelIterator::new(screen_size).for_each(|screen_pos| {
-            let red = screen_pos.x % 255;
-            let green = screen_pos.y % 255;
-            let blue = (screen_pos.x * screen_pos.y) % 255;
+        let mut new_buffer = (0..buffer.len() as u32)
+            .into_iter()
+            .map(|index| {
+                let screen_pos = index_to_pos(index, &screen_size);
 
-            set_pixel(&screen_pos, &screen_size, red, green, blue, buffer);
-        });
+                let (red, green, blue) = calculate_color(screen_pos, &self.camera);
+
+                rgb_to_u32(red, green, blue)
+            })
+            .collect::<Vec<u32>>();
+
+        // TODO: Optimize
+        for i in 0..buffer.len() {
+            std::mem::swap(&mut buffer[i], &mut new_buffer[i]);
+        }
     }
+}
+
+fn calculate_color(screen_pos: Vector2<u32>, camera: &Camera) -> (u32, u32, u32) {
+    let red = screen_pos.x % 255;
+    let green = screen_pos.y % 255;
+    let blue = (screen_pos.x * screen_pos.y) % 255;
+
+    (red, green, blue)
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -68,43 +76,15 @@ impl Camera {
     }
 }
 
-struct PixelIterator {
-    screen_size: Vector2<u32>,
-    x: u32,
-    y: u32,
+#[allow(dead_code)]
+fn pos_to_index(screen_pos: &Vector2<u32>, screen_size: &Vector2<u32>) -> u32 {
+    screen_pos.y * screen_size.x + screen_pos.x
 }
 
-impl PixelIterator {
-    pub fn new(screen_size: impl Into<Vector2<u32>>) -> Self {
-        Self {
-            screen_size: screen_size.into(),
-            x: 0,
-            y: 0,
-        }
-    }
-}
+#[allow(dead_code)]
+fn index_to_pos(index: u32, screen_size: &Vector2<u32>) -> Vector2<u32> {
+    let x = index % screen_size.x;
+    let y = (index - x) / screen_size.y;
 
-impl Iterator for PixelIterator {
-    type Item = Vector2<u32>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let out = Vector2::new(self.x, self.y);
-
-        self.x += 1;
-        if self.x >= self.screen_size.x {
-            self.x = 0;
-            self.y += 1;
-        }
-
-        if self.y >= self.screen_size.y {
-            None
-        } else {
-            Some(out)
-        }
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        let estimate = self.screen_size.x as usize * self.screen_size.y as usize;
-        (estimate, Some(estimate))
-    }
+    Vector2::new(x, y)
 }
