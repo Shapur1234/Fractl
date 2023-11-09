@@ -42,7 +42,6 @@ fn main() {
         )
     });
 
-    let mut force_redraw = false;
     event_loop
         .run(move |event, elwt| {
             elwt.set_control_flow(ControlFlow::Wait);
@@ -53,7 +52,6 @@ fn main() {
                     event: WindowEvent::RedrawRequested,
                 } if window_id == window.id() => {
                     draw(&window, &mut surface, &mut state);
-                    force_redraw = false;
                 }
                 Event::WindowEvent {
                     event:
@@ -76,16 +74,11 @@ fn main() {
                 } => {
                     if window_id == window.id() {
                         if state.handle_keyboard_input(key_event) {
-                            force_redraw = true;
+                            window.request_redraw()
                         }
                     }
                 }
                 _ => {}
-            }
-
-            if force_redraw {
-                draw(&window, &mut surface, &mut state);
-                force_redraw = false;
             }
         })
         .unwrap();

@@ -7,6 +7,9 @@ use winit::{
     keyboard::{KeyCode, PhysicalKey},
 };
 
+#[cfg(not(target_arch = "wasm32"))]
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
+
 #[derive(Clone, Debug)]
 pub struct State {
     camera: Camera,
@@ -24,9 +27,6 @@ impl State {
     }
 
     pub fn render(&self, buffer: &mut [u32], screen_size: impl Into<Vector2<NonZeroU32>>) {
-        #[cfg(not(target_arch = "wasm32"))]
-        use rayon::prelude::*;
-
         fn rgb_to_u32(red: u8, green: u8, blue: u8) -> u32 {
             (blue as u32) | ((green as u32) << 8) | ((red as u32) << 16)
         }
@@ -62,7 +62,7 @@ impl State {
 }
 
 fn calculate_color(world_pos: Vector2<f64>) -> (u8, u8, u8) {
-    const MAX_ITERATIONS: usize = 80;
+    const MAX_ITERATIONS: usize = 10;
 
     let c = Complex::new(world_pos.x, world_pos.y);
     let (mut z, mut n): (Complex<f64>, usize) = (Complex::new(0.0, 0.0), 0);
@@ -73,16 +73,14 @@ fn calculate_color(world_pos: Vector2<f64>) -> (u8, u8, u8) {
     }
 
     if z.abs() >= 2.0 {
-        (255, 255, 255)
+        (
+            ((n as f64 / MAX_ITERATIONS as f64) * 255.0) as u8,
+            ((n as f64 / MAX_ITERATIONS as f64) * 255.0) as u8,
+            ((n as f64 / MAX_ITERATIONS as f64) * 255.0) as u8,
+        )
     } else {
         (0, 0, 0)
     }
-
-    // if world_pos.x.powi(2) + world_pos.y.powi(2) <= 0.1 {
-    //     (255, 255, 255)
-    // } else {
-    //     (0, 0, 0)
-    // }
 }
 
 #[derive(Clone, Debug, PartialEq)]

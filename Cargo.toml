@@ -19,5 +19,8 @@ rayon = "1.8.0"
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 web-sys = "0.3"
 
+[profile.release]
+lto = true
+
 [workspace]
 members = ["run-wasm"]

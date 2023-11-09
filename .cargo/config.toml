@@ -1,0 +1,7 @@
+[alias]
+r-wasm = "run --release --package run-wasm -- --package fractaller"
+rr-wasm = "run --release --package run-wasm -- --package fractaller -- --release"
+run-wasm = "run --release --package run-wasm --"
+
+[build]
+rustflags = ["-C", "target-cpu=native"]
