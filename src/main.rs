@@ -42,6 +42,7 @@ fn main() {
         )
     });
 
+    let mut force_redraw = false;
     event_loop
         .run(move |event, elwt| {
             elwt.set_control_flow(ControlFlow::Wait);
@@ -51,25 +52,8 @@ fn main() {
                     window_id,
                     event: WindowEvent::RedrawRequested,
                 } if window_id == window.id() => {
-                    if let (Some(screen_width), Some(screen_height)) = {
-                        let size = window.inner_size();
-                        (NonZeroU32::new(size.width), NonZeroU32::new(size.height))
-                    } {
-                        let screen_size = Vector2::new(screen_width, screen_height);
-
-                        {
-                            surface.resize(screen_size.x, screen_size.y).unwrap();
-                            state.resize(screen_size);
-                        }
-
-                        {
-                            let mut buffer = surface.buffer_mut().unwrap();
-
-                            state.render(&mut buffer, screen_size);
-
-                            buffer.present().unwrap();
-                        }
-                    }
+                    draw(&window, &mut surface, &mut state);
+                    force_redraw = false;
                 }
                 Event::WindowEvent {
                     event:
@@ -91,11 +75,44 @@ fn main() {
                     window_id,
                 } => {
                     if window_id == window.id() {
-                        state.handle_keyboard_input(key_event);
+                        if state.handle_keyboard_input(key_event) {
+                            force_redraw = true;
+                        }
                     }
                 }
                 _ => {}
             }
+
+            if force_redraw {
+                draw(&window, &mut surface, &mut state);
+                force_redraw = false;
+            }
         })
         .unwrap();
+}
+
+fn draw(
+    window: &Rc<winit::window::Window>,
+    surface: &mut softbuffer::Surface<Rc<winit::window::Window>, Rc<winit::window::Window>>,
+    state: &mut State,
+) {
+    if let (Some(screen_width), Some(screen_height)) = {
+        let size = window.inner_size();
+        (NonZeroU32::new(size.width), NonZeroU32::new(size.height))
+    } {
+        let screen_size = Vector2::new(screen_width, screen_height);
+
+        {
+            surface.resize(screen_size.x, screen_size.y).unwrap();
+            state.resize(screen_size);
+        }
+
+        {
+            let mut buffer = surface.buffer_mut().unwrap();
+
+            state.render(&mut buffer, screen_size);
+
+            buffer.present().unwrap();
+        }
+    }
 }

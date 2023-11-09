@@ -44,7 +44,7 @@ impl State {
         }
     }
 
-    pub fn handle_keyboard_input(&mut self, key: KeyEvent) {
+    pub fn handle_keyboard_input(&mut self, key: KeyEvent) -> bool {
         self.camera.handle_keyboard_input(key)
     }
 }
@@ -65,8 +65,10 @@ struct Camera {
 }
 
 impl Camera {
-    const MOVE_INCREMENT: f64 = 0.05;
-    const ZOOM_INCREMENT: f64 = 0.1;
+    const MOVE_INCREMENT: f64 = 0.01;
+    const ZOOM_INCREMENT: f64 = 0.05;
+    const MIN_ZOOM: f64 = 0.01;
+    const MAX_ZOOM: f64 = 4.0;
 
     pub fn new(screen_size: impl Into<Vector2<NonZeroU32>>) -> Self {
         Self {
@@ -85,27 +87,71 @@ impl Camera {
         new_screen_size.x / new_screen_size.y
     }
 
-    pub fn handle_keyboard_input(&mut self, key_event: KeyEvent) {
+    pub fn handle_keyboard_input(&mut self, key_event: KeyEvent) -> bool {
         if key_event.state == ElementState::Pressed {
-            match key_event.physical_key {
-                PhysicalKey::Code(key_code) => match key_code {
+            if let PhysicalKey::Code(key_code) = key_event.physical_key {
+                match key_code {
                     KeyCode::KeyW => {
-                        self.center_pos.y += Camera::MOVE_INCREMENT;
+                        self.center_pos.y -= Camera::MOVE_INCREMENT;
+                        return true;
                     }
                     KeyCode::KeyS => {
-                        self.center_pos.y -= Camera::MOVE_INCREMENT;
+                        self.center_pos.y += Camera::MOVE_INCREMENT;
+                        return true;
                     }
                     KeyCode::KeyA => {
-                        self.center_pos.x += Camera::MOVE_INCREMENT;
+                        self.center_pos.x -= Camera::MOVE_INCREMENT;
+                        return true;
                     }
                     KeyCode::KeyD => {
-                        self.center_pos.x -= Camera::MOVE_INCREMENT;
+                        self.center_pos.x += Camera::MOVE_INCREMENT;
+                        return true;
+                    }
+                    KeyCode::ArrowUp => {
+                        self.zoom.y += Camera::ZOOM_INCREMENT;
+                        self.zoom.y = self.zoom.y.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM);
+                        return true;
+                    }
+                    KeyCode::ArrowDown => {
+                        self.zoom.y -= Camera::ZOOM_INCREMENT;
+                        self.zoom.y = self.zoom.y.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM);
+                        return true;
+                    }
+                    KeyCode::ArrowRight => {
+                        self.zoom.x += Camera::ZOOM_INCREMENT;
+                        self.zoom.x = self.zoom.x.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM);
+                        return true;
+                    }
+                    KeyCode::ArrowLeft => {
+                        self.zoom.x -= Camera::ZOOM_INCREMENT;
+                        self.zoom.x = self.zoom.x.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM);
+                        return true;
+                    }
+                    KeyCode::KeyO => {
+                        self.zoom.x += Camera::ZOOM_INCREMENT;
+                        self.zoom.y += Camera::ZOOM_INCREMENT;
+
+                        self.zoom.x = self.zoom.x.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM);
+                        self.zoom.y = self.zoom.y.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM);
+                        return true;
+                    }
+                    KeyCode::KeyP => {
+                        self.zoom.x -= Camera::ZOOM_INCREMENT;
+                        self.zoom.y -= Camera::ZOOM_INCREMENT;
+
+                        self.zoom.x = self.zoom.x.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM);
+                        self.zoom.y = self.zoom.y.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM);
+                        return true;
+                    }
+                    KeyCode::KeyI => {
+                        self.zoom = Vector2::new(1.0, 1.0);
+                        return true;
                     }
                     _ => {}
-                },
-                _ => {}
+                }
             }
         }
+        false
     }
 
     fn world_pos(&self, screen_pos: &Vector2<u32>, screen_size: &Vector2<u32>) -> Vector2<f64> {
