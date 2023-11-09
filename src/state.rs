@@ -1,6 +1,10 @@
 use std::num::NonZeroU32;
 
 use cgmath::Vector2;
+use winit::{
+    event::{ElementState, KeyEvent},
+    keyboard::{KeyCode, PhysicalKey},
+};
 
 #[derive(Clone, Debug)]
 pub struct State {
@@ -27,7 +31,6 @@ impl State {
         assert_eq!(buffer.len(), (screen_size.x * screen_size.y) as usize);
 
         let mut new_buffer = (0..buffer.len() as u32)
-            .into_iter()
             .map(|index| {
                 let screen_pos = index_to_pos(index, &screen_size);
                 let (red, green, blue) = calculate_color(self.camera.world_pos(&screen_pos, &screen_size));
@@ -39,6 +42,10 @@ impl State {
         for i in 0..buffer.len() {
             std::mem::swap(&mut buffer[i], &mut new_buffer[i]);
         }
+    }
+
+    pub fn handle_keyboard_input(&mut self, key: KeyEvent) {
+        self.camera.handle_keyboard_input(key)
     }
 }
 
@@ -58,6 +65,9 @@ struct Camera {
 }
 
 impl Camera {
+    const MOVE_INCREMENT: f64 = 0.05;
+    const ZOOM_INCREMENT: f64 = 0.1;
+
     pub fn new(screen_size: impl Into<Vector2<NonZeroU32>>) -> Self {
         Self {
             center_pos: Vector2::new(0.0, 0.0),
@@ -73,6 +83,29 @@ impl Camera {
     fn calc_ratio(new_screen_size: impl Into<Vector2<NonZeroU32>>) -> f64 {
         let new_screen_size = new_screen_size.into().map(|x| x.get() as f64);
         new_screen_size.x / new_screen_size.y
+    }
+
+    pub fn handle_keyboard_input(&mut self, key_event: KeyEvent) {
+        if key_event.state == ElementState::Pressed {
+            match key_event.physical_key {
+                PhysicalKey::Code(key_code) => match key_code {
+                    KeyCode::KeyW => {
+                        self.center_pos.y += Camera::MOVE_INCREMENT;
+                    }
+                    KeyCode::KeyS => {
+                        self.center_pos.y -= Camera::MOVE_INCREMENT;
+                    }
+                    KeyCode::KeyA => {
+                        self.center_pos.x += Camera::MOVE_INCREMENT;
+                    }
+                    KeyCode::KeyD => {
+                        self.center_pos.x -= Camera::MOVE_INCREMENT;
+                    }
+                    _ => {}
+                },
+                _ => {}
+            }
+        }
     }
 
     fn world_pos(&self, screen_pos: &Vector2<u32>, screen_size: &Vector2<u32>) -> Vector2<f64> {

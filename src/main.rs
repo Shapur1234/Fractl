@@ -86,6 +86,14 @@ fn main() {
                 } if window_id == window.id() => {
                     elwt.exit();
                 }
+                Event::WindowEvent {
+                    event: WindowEvent::KeyboardInput { event: key_event, .. },
+                    window_id,
+                } => {
+                    if window_id == window.id() {
+                        state.handle_keyboard_input(key_event);
+                    }
+                }
                 _ => {}
             }
         })
