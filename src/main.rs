@@ -11,6 +11,10 @@ use winit::{
     window::WindowBuilder,
 };
 
+// TODO: Rayon feature
+// TODO: Zoom, Mouse
+// TODO: Performance
+
 fn main() {
     let event_loop = EventLoop::new().unwrap();
     let window = Rc::new(WindowBuilder::new().build(&event_loop).unwrap());
@@ -72,10 +76,8 @@ fn main() {
                     event: WindowEvent::KeyboardInput { event: key_event, .. },
                     window_id,
                 } => {
-                    if window_id == window.id() {
-                        if state.handle_keyboard_input(key_event) {
-                            window.request_redraw()
-                        }
+                    if window_id == window.id() && state.handle_keyboard_input(&key_event) {
+                        window.request_redraw()
                     }
                 }
                 _ => {}
