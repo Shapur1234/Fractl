@@ -88,7 +88,7 @@ impl Camera {
                         self.zoom.x += Camera::ZOOM_INCREMENT * self.zoom.x;
                         self.zoom.y += Camera::ZOOM_INCREMENT * self.zoom.y;
 
-                        self.zoom.map(|x| x.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM));
+                        self.zoom = self.zoom.map(|x| x.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM));
 
                         true
                     }
@@ -96,7 +96,7 @@ impl Camera {
                         self.zoom.x -= Camera::ZOOM_INCREMENT * self.zoom.x;
                         self.zoom.y -= Camera::ZOOM_INCREMENT * self.zoom.y;
 
-                        self.zoom.map(|x| x.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM));
+                        self.zoom = self.zoom.map(|x| x.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM));
 
                         true
                     }
