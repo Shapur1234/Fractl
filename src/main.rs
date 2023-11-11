@@ -14,8 +14,7 @@ use winit::{
 
 use crate::state::State;
 
-// TODO: Rayon feature
-// TODO: Zoom, Mouse
+// TODO: Mouse
 // TODO: Performance
 
 fn main() {

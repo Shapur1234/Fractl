@@ -8,7 +8,7 @@ use winit::{
 
 use crate::{camera::Camera, math::mandelbrot};
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "rayon")]
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 #[derive(Clone, Debug)]
@@ -39,10 +39,10 @@ impl State {
 
         let range = 0..buffer.len() as u32;
 
-        #[cfg(target_arch = "wasm32")]
+        #[cfg(not(feature = "rayon"))]
         let iterator = range.into_iter();
 
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(feature = "rayon")]
         let iterator = range.into_par_iter();
 
         let mut new_buffer = iterator
