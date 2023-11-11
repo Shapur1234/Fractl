@@ -1,13 +1,12 @@
 use std::num::NonZeroU32;
 
 use cgmath::Vector2;
-use num::{complex::ComplexFloat, Complex};
 use winit::{
     event::{ElementState, KeyEvent},
     keyboard::{KeyCode, PhysicalKey},
 };
 
-use crate::camera::Camera;
+use crate::{camera::Camera, math::mandelbrot};
 
 #[cfg(not(target_arch = "wasm32"))]
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
@@ -54,7 +53,7 @@ impl State {
                     return rgb_to_u32(255, 0, 0);
                 }
 
-                let (red, green, blue) = calculate_color(
+                let (red, green, blue) = mandelbrot(
                     self.camera.screen_to_world_pos(&screen_pos, &screen_size),
                     self.max_iterations,
                 );
@@ -97,28 +96,6 @@ impl State {
 
     pub fn handle_keyboard_input(&mut self, key_event: &KeyEvent) -> bool {
         self.handle_state_keyboard_input(key_event) || self.camera.handle_keyboard_input(key_event)
-    }
-}
-
-fn calculate_color(world_pos: Vector2<f64>, max_iterations: NonZeroU32) -> (u8, u8, u8) {
-    let max_iterations = max_iterations.get() as usize;
-
-    let c = Complex::new(world_pos.x, world_pos.y);
-    let (mut z, mut n): (Complex<f64>, usize) = (Complex::new(0.0, 0.0), 0);
-
-    while z.abs() <= 2.0 && n < max_iterations {
-        z = z.powi(2) + c;
-        n += 1;
-    }
-
-    if z.abs() >= 2.0 {
-        (
-            ((n as f64 / max_iterations as f64) * 255.0) as u8,
-            ((n as f64 / max_iterations as f64) * 255.0) as u8,
-            ((n as f64 / max_iterations as f64) * 255.0) as u8,
-        )
-    } else {
-        (0, 0, 0)
     }
 }
 

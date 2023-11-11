@@ -1,4 +1,5 @@
 mod camera;
+mod math;
 mod state;
 
 use std::{num::NonZeroU32, rc::Rc};
@@ -98,7 +99,6 @@ fn draw(
         (NonZeroU32::new(size.width), NonZeroU32::new(size.height))
     } {
         let screen_size = Vector2::new(screen_width, screen_height);
-        dbg!(screen_size);
 
         {
             surface.resize(screen_size.x, screen_size.y).unwrap();
