@@ -1,15 +1,17 @@
+mod camera;
 mod state;
 
-use crate::state::State;
+use std::{num::NonZeroU32, rc::Rc};
 
 use cgmath::Vector2;
-use std::{num::NonZeroU32, rc::Rc};
 use winit::{
     event::{Event, KeyEvent, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     keyboard::{Key, NamedKey},
     window::WindowBuilder,
 };
+
+use crate::state::State;
 
 // TODO: Rayon feature
 // TODO: Zoom, Mouse
@@ -96,6 +98,7 @@ fn draw(
         (NonZeroU32::new(size.width), NonZeroU32::new(size.height))
     } {
         let screen_size = Vector2::new(screen_width, screen_height);
+        dbg!(screen_size);
 
         {
             surface.resize(screen_size.x, screen_size.y).unwrap();

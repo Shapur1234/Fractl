@@ -7,6 +7,8 @@ use winit::{
     keyboard::{KeyCode, PhysicalKey},
 };
 
+use crate::camera::Camera;
+
 #[cfg(not(target_arch = "wasm32"))]
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
@@ -47,8 +49,15 @@ impl State {
         let mut new_buffer = iterator
             .map(|index| {
                 let screen_pos = index_to_pos(index, &screen_size);
-                let (red, green, blue) =
-                    calculate_color(self.camera.world_pos(&screen_pos, &screen_size), self.max_iterations);
+
+                if screen_pos == screen_size / 2 {
+                    return rgb_to_u32(255, 0, 0);
+                }
+
+                let (red, green, blue) = calculate_color(
+                    self.camera.screen_to_world_pos(&screen_pos, &screen_size),
+                    self.max_iterations,
+                );
                 rgb_to_u32(red, green, blue)
             })
             .collect::<Vec<u32>>();
@@ -113,129 +122,6 @@ fn calculate_color(world_pos: Vector2<f64>, max_iterations: NonZeroU32) -> (u8, 
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-struct Camera {
-    center_pos: Vector2<f64>,
-    view_size: Vector2<f64>,
-    zoom: Vector2<f64>,
-}
-
-impl Camera {
-    const MOVE_INCREMENT: f64 = 0.005;
-    const ZOOM_INCREMENT: f64 = 0.02;
-    const MIN_ZOOM: f64 = 0.1;
-    const MAX_ZOOM: f64 = f64::MAX;
-
-    pub fn new(screen_size: impl Into<Vector2<NonZeroU32>>) -> Self {
-        Self {
-            center_pos: Vector2::new(0.0, 0.0),
-            view_size: Vector2::new(Camera::calc_ratio(screen_size), 1.0),
-            zoom: Vector2::new(1.0, 1.0),
-        }
-    }
-
-    pub fn resize(&mut self, new_screen_size: impl Into<Vector2<NonZeroU32>>) {
-        self.view_size.x = Camera::calc_ratio(new_screen_size);
-    }
-
-    fn calc_ratio(new_screen_size: impl Into<Vector2<NonZeroU32>>) -> f64 {
-        let new_screen_size = new_screen_size.into().map(|x| x.get() as f64);
-        new_screen_size.x / new_screen_size.y
-    }
-
-    pub fn handle_keyboard_input(&mut self, key_event: &KeyEvent) -> bool {
-        if key_event.state == ElementState::Pressed {
-            if let PhysicalKey::Code(key_code) = key_event.physical_key {
-                match key_code {
-                    KeyCode::KeyW => {
-                        self.center_pos.y -= (Camera::MOVE_INCREMENT) / self.zoom.y;
-
-                        true
-                    }
-                    KeyCode::KeyS => {
-                        self.center_pos.y += (Camera::MOVE_INCREMENT) / self.zoom.y;
-
-                        true
-                    }
-                    KeyCode::KeyA => {
-                        self.center_pos.x -= (Camera::MOVE_INCREMENT) / self.zoom.x;
-
-                        true
-                    }
-                    KeyCode::KeyD => {
-                        self.center_pos.x += (Camera::MOVE_INCREMENT) / self.zoom.x;
-
-                        true
-                    }
-                    KeyCode::ArrowUp => {
-                        self.zoom.y += Camera::ZOOM_INCREMENT * self.zoom.y;
-                        self.zoom.y = self.zoom.y.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM);
-
-                        true
-                    }
-                    KeyCode::ArrowDown => {
-                        self.zoom.y -= Camera::ZOOM_INCREMENT * self.zoom.y;
-                        self.zoom.y = self.zoom.y.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM);
-
-                        true
-                    }
-                    KeyCode::ArrowRight => {
-                        self.zoom.x += Camera::ZOOM_INCREMENT * self.zoom.x;
-                        self.zoom.x = self.zoom.x.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM);
-
-                        true
-                    }
-                    KeyCode::ArrowLeft => {
-                        self.zoom.x -= Camera::ZOOM_INCREMENT * self.zoom.x;
-                        self.zoom.x = self.zoom.x.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM);
-
-                        true
-                    }
-                    KeyCode::KeyO => {
-                        self.zoom.x += Camera::ZOOM_INCREMENT * self.zoom.x;
-                        self.zoom.y += Camera::ZOOM_INCREMENT * self.zoom.y;
-
-                        self.zoom.x = self.zoom.x.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM);
-                        self.zoom.y = self.zoom.y.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM);
-
-                        true
-                    }
-                    KeyCode::KeyP => {
-                        self.zoom.x -= Camera::ZOOM_INCREMENT * self.zoom.x;
-                        self.zoom.y -= Camera::ZOOM_INCREMENT * self.zoom.y;
-
-                        self.zoom.x = self.zoom.x.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM);
-                        self.zoom.y = self.zoom.y.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM);
-
-                        true
-                    }
-                    KeyCode::KeyI => {
-                        self.zoom = Vector2::new(1.0, 1.0);
-
-                        true
-                    }
-                    _ => false,
-                }
-            } else {
-                false
-            }
-        } else {
-            false
-        }
-    }
-
-    fn world_pos(&self, screen_pos: &Vector2<u32>, screen_size: &Vector2<u32>) -> Vector2<f64> {
-        let (screen_pos, screen_size) = (screen_pos.map(|x| x as f64), screen_size.map(|x| x as f64));
-
-        Vector2::new(
-            ((screen_pos.x * self.view_size.x / self.zoom.x) / screen_size.x) + self.center_pos.x
-                - self.view_size.x / 2.0,
-            ((screen_pos.y * self.view_size.y / self.zoom.y) / screen_size.y) + self.center_pos.y
-                - self.view_size.y / 2.0,
-        )
-    }
-}
-
 #[allow(dead_code)]
 fn pos_to_index(screen_pos: &Vector2<u32>, screen_size: &Vector2<u32>) -> u32 {
     screen_pos.y * screen_size.x + screen_pos.x
@@ -244,7 +130,7 @@ fn pos_to_index(screen_pos: &Vector2<u32>, screen_size: &Vector2<u32>) -> u32 {
 #[allow(dead_code)]
 fn index_to_pos(index: u32, screen_size: &Vector2<u32>) -> Vector2<u32> {
     let x = index % screen_size.x;
-    let y = (index - x) / screen_size.y;
+    let y = (index - x) / screen_size.x;
 
     Vector2::new(x, y)
 }
