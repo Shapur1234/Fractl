@@ -14,7 +14,7 @@ use winit::{
 
 use crate::state::State;
 
-// TODO: Mouse
+// TODO: Mouse controls
 // TODO: UI
 // TODO: Performance
 
