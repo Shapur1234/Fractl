@@ -15,7 +15,7 @@ use winit::{
 use crate::state::State;
 
 // TODO: Mouse controls
-// TODO: UI - Egui?
+// TODO: UI - Egui
 // TODO: Performance
 
 fn main() {
