@@ -1,4 +1,4 @@
 [alias]
-rr = "run --profile release-lto --features rayon -- -C target-cpu=native"
+rr = "run --release --features rayon -- -C target-cpu=native"
 r-wasm = "run --release --package run-wasm -- --package fractaller"
-rr-wasm = "run --release --package run-wasm -- --package fractaller -- --profile release-lto"
+rr-wasm = "run --release --package run-wasm -- --package fractaller -- --release"

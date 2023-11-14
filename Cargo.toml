@@ -9,8 +9,7 @@ repository = "https://github.com/Shapur1234/Fractaller"
 [workspace]
 members = ["run-wasm"]
 
-[profile.release-lto]
-inherits = "release"
+[profile.release]
 lto = true
 
 [dependencies]
