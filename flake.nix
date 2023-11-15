@@ -77,10 +77,10 @@
             "rustc"
           ]);
 
-        rust_wasm32_target = pkgs.rust-bin.stable.latest.default.override {
-          targets = [ "wasm32-unknown-unknown" ];
-          extensions = [ "rust-src" ];
-        };
+        # rust_wasm32_target = pkgs.rust-bin.stable.latest.default.override {
+        #   targets = [ "wasm32-unknown-unknown" ];
+        #   extensions = [ "rust-src" ];
+        # };
         cargoArtifacts = craneLib.buildDepsOnly commonArgs;
 
         fractaller = craneLib.buildPackage (commonArgs // {
@@ -124,9 +124,10 @@
           checks = self.checks.${system};
 
           packages = with pkgs;[
-            rust_wasm32_target
+            # rust_wasm32_target
 
             cargo-flamegraph
+            gdb
           ];
 
           LD_LIBRARY_PATH = lib.makeLibraryPath runtimeLibraries;
