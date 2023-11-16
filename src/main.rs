@@ -17,6 +17,7 @@ use crate::state::State;
 // TODO: Mouse controls
 // TODO: UI - Egui?
 // TODO: Performance
+// TODO: Memoize
 
 fn main() {
     let event_loop = EventLoop::new().unwrap();

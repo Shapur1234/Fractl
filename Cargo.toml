@@ -9,6 +9,12 @@ repository = "https://github.com/Shapur1234/Fractaller"
 [profile.release]
 lto = true
 
+[profile.flamegraph]
+inherits = "release"
+lto = false
+debug = true
+panic = "abort"
+
 [dependencies]
 cgmath = "0.18.0"
 console_error_panic_hook = "0.1.7"
