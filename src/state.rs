@@ -61,7 +61,6 @@ impl State {
             })
             .collect::<Vec<u32>>();
 
-        // TODO: Optimize
         for i in 0..buffer.len() {
             std::mem::swap(&mut buffer[i], &mut new_buffer[i]);
         }
