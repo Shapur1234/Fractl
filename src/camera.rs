@@ -115,6 +115,19 @@ impl Camera {
         }
     }
 
+    pub fn zoom_to(&mut self, by: f64, world_pos: Vector2<f64>) {
+        let zoom_old = self.zoom;
+
+        self.zoom.x += Camera::ZOOM_INCREMENT * self.zoom.x * by;
+        self.zoom.y += Camera::ZOOM_INCREMENT * self.zoom.y * by;
+
+        self.zoom = self.zoom.map(|x| x.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM));
+
+        let (world_pos_delta, zoom_delta) = (world_pos - self.center_pos, self.zoom - zoom_old);
+        let world_pos_delta_normed = world_pos_delta.map(|x| if x >= 0.0 { x.sqrt() } else { -x.abs().sqrt() });
+        self.center_pos += world_pos_delta_normed.zip(zoom_delta, |x, y| x * y);
+    }
+
     pub fn screen_to_world_pos(&self, screen_pos: &Vector2<u32>, screen_size: &Vector2<u32>) -> Vector2<f64> {
         let screen_pos_normalized = screen_pos.zip(*screen_size, |pos, size| (pos as f64 / size as f64) - 0.5);
 

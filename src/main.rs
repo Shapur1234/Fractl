@@ -6,18 +6,15 @@ use std::{num::NonZeroU32, rc::Rc};
 
 use cgmath::Vector2;
 use winit::{
-    event::{Event, KeyEvent, WindowEvent},
+    event::{ElementState, Event, KeyEvent, MouseScrollDelta, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     keyboard::{Key, NamedKey},
-    window::WindowBuilder,
+    window::{Fullscreen, WindowBuilder},
 };
 
 use crate::state::State;
 
-// TODO: Mouse controls
 // TODO: UI - Egui?
-// TODO: Performance
-// TODO: Memoize
 
 fn main() {
     let event_loop = EventLoop::new().unwrap();
@@ -42,13 +39,15 @@ fn main() {
     let context = softbuffer::Context::new(window.clone()).unwrap();
     let mut surface = softbuffer::Surface::new(&context, window.clone()).unwrap();
 
-    let mut state = State::new({
+    let mut mouse_pos = Vector2::new(0.0, 0.0);
+    let mut screen_size = {
         let size = window.inner_size();
         Vector2::new(
             NonZeroU32::new(size.width).unwrap_or(NonZeroU32::new(640).unwrap()),
             NonZeroU32::new(size.height).unwrap_or(NonZeroU32::new(360).unwrap()),
         )
-    });
+    };
+    let mut state = State::new(screen_size);
 
     event_loop
         .run(move |event, elwt| {
@@ -59,59 +58,72 @@ fn main() {
                     window_id,
                     event: WindowEvent::RedrawRequested,
                 } if window_id == window.id() => {
-                    draw(&window, &mut surface, &mut state);
+                    if let (Some(screen_width), Some(screen_height)) = {
+                        let size = window.inner_size();
+                        (NonZeroU32::new(size.width), NonZeroU32::new(size.height))
+                    } {
+                        screen_size = Vector2::new(screen_width, screen_height);
+
+                        surface.resize(screen_size.x, screen_size.y).unwrap();
+                        state.resize(screen_size);
+
+                        let mut buffer = surface.buffer_mut().unwrap();
+                        state.render(&mut buffer, screen_size);
+                        buffer.present().unwrap();
+                    }
                 }
-                Event::WindowEvent {
-                    event:
-                        WindowEvent::CloseRequested
-                        | WindowEvent::KeyboardInput {
-                            event:
-                                KeyEvent {
-                                    logical_key: Key::Named(NamedKey::Escape),
-                                    ..
-                                },
-                            ..
-                        },
-                    window_id,
-                } if window_id == window.id() => {
-                    elwt.exit();
-                }
-                Event::WindowEvent {
-                    event: WindowEvent::KeyboardInput { event: key_event, .. },
-                    window_id,
-                } => {
-                    if window_id == window.id() && state.handle_keyboard_input(&key_event) {
-                        window.request_redraw()
+                Event::WindowEvent { window_id, event } => {
+                    if window_id == window.id() {
+                        match event {
+                            WindowEvent::CloseRequested
+                            | WindowEvent::KeyboardInput {
+                                event:
+                                    KeyEvent {
+                                        logical_key: Key::Named(NamedKey::Escape),
+                                        ..
+                                    },
+                                ..
+                            } => {
+                                elwt.exit();
+                            }
+                            WindowEvent::KeyboardInput {
+                                event:
+                                    KeyEvent {
+                                        logical_key: Key::Named(NamedKey::F11),
+                                        state: ElementState::Pressed,
+                                        ..
+                                    },
+                                ..
+                            } => {
+                                if window.fullscreen().is_none() {
+                                    window.set_fullscreen(Some(Fullscreen::Borderless(None)))
+                                } else {
+                                    window.set_fullscreen(None)
+                                }
+                            }
+                            WindowEvent::KeyboardInput { event: key_event, .. } => {
+                                if state.handle_keyboard_input(&key_event) {
+                                    window.request_redraw()
+                                }
+                            }
+                            WindowEvent::CursorMoved { position, .. } => {
+                                mouse_pos.x = position.x;
+                                mouse_pos.y = position.y;
+                            }
+                            WindowEvent::MouseWheel {
+                                delta: MouseScrollDelta::LineDelta(_, y),
+                                ..
+                            } => {
+                                state.zoom_to(y as f64, mouse_pos, screen_size);
+
+                                window.request_redraw()
+                            }
+                            _ => {}
+                        }
                     }
                 }
                 _ => {}
             }
         })
         .unwrap();
-}
-
-fn draw(
-    window: &Rc<winit::window::Window>,
-    surface: &mut softbuffer::Surface<Rc<winit::window::Window>, Rc<winit::window::Window>>,
-    state: &mut State,
-) {
-    if let (Some(screen_width), Some(screen_height)) = {
-        let size = window.inner_size();
-        (NonZeroU32::new(size.width), NonZeroU32::new(size.height))
-    } {
-        let screen_size = Vector2::new(screen_width, screen_height);
-
-        {
-            surface.resize(screen_size.x, screen_size.y).unwrap();
-            state.resize(screen_size);
-        }
-
-        {
-            let mut buffer = surface.buffer_mut().unwrap();
-
-            state.render(&mut buffer, screen_size);
-
-            buffer.present().unwrap();
-        }
-    }
 }

@@ -96,6 +96,14 @@ impl State {
     pub fn handle_keyboard_input(&mut self, key_event: &KeyEvent) -> bool {
         self.handle_state_keyboard_input(key_event) || self.camera.handle_keyboard_input(key_event)
     }
+
+    pub fn zoom_to(&mut self, by: f64, mouse_pos: Vector2<f64>, screen_size: Vector2<NonZeroU32>) {
+        let mouse_world_pos = self
+            .camera
+            .screen_to_world_pos(&mouse_pos.map(|x| x as u32), &screen_size.map(|x| x.get()));
+
+        self.camera.zoom_to(by, mouse_world_pos);
+    }
 }
 
 #[allow(dead_code)]
