@@ -136,7 +136,9 @@ impl Camera {
             && zoom_delta.x.is_normal()
             && zoom_delta.y.is_normal()
         {
-            self.center_pos += world_pos_delta_normed.zip(zoom_delta, |x, y| x * y);
+            self.center_pos += world_pos_delta_normed
+                .zip(zoom_delta, |x, y| x * y)
+                .zip(self.zoom, |x, y| x / y);
         }
     }
 
