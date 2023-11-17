@@ -1,6 +1,6 @@
 use std::num::NonZeroU32;
 
-use cgmath::Vector2;
+use cgmath::{num_traits::Signed, Vector2};
 use winit::{
     event::{ElementState, KeyEvent},
     keyboard::{KeyCode, PhysicalKey},
@@ -124,8 +124,20 @@ impl Camera {
         self.zoom = self.zoom.map(|x| x.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM));
 
         let (world_pos_delta, zoom_delta) = (world_pos - self.center_pos, self.zoom - zoom_old);
-        let world_pos_delta_normed = world_pos_delta.map(|x| if x >= 0.0 { x.sqrt() } else { -x.abs().sqrt() });
-        self.center_pos += world_pos_delta_normed.zip(zoom_delta, |x, y| x * y);
+        let world_pos_delta_normed = world_pos_delta.map(|x| {
+            if x.is_sign_positive() {
+                x.sqrt()
+            } else {
+                -x.abs().sqrt()
+            }
+        });
+        if world_pos_delta_normed.x.is_normal()
+            && world_pos_delta_normed.y.is_normal()
+            && zoom_delta.x.is_normal()
+            && zoom_delta.y.is_normal()
+        {
+            self.center_pos += world_pos_delta_normed.zip(zoom_delta, |x, y| x * y);
+        }
     }
 
     pub fn screen_to_world_pos(&self, screen_pos: &Vector2<u32>, screen_size: &Vector2<u32>) -> Vector2<f64> {
