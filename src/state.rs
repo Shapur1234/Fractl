@@ -11,6 +11,9 @@ use crate::{camera::Camera, math::mandelbrot};
 #[cfg(feature = "rayon")]
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
+const DEFAULT_MAX_ITERATIONS: NonZeroU32 =
+    unsafe { NonZeroU32::new_unchecked(if cfg!(debug_assertions) { 10 } else { 40 }) };
+
 #[derive(Clone, Debug)]
 pub struct State {
     camera: Camera,
@@ -21,7 +24,7 @@ impl State {
     pub fn new(screen_size: impl Into<Vector2<NonZeroU32>>) -> Self {
         Self {
             camera: Camera::new(screen_size),
-            max_iterations: NonZeroU32::new(if cfg!(debug_assertions) { 10 } else { 50 }).unwrap(),
+            max_iterations: DEFAULT_MAX_ITERATIONS,
         }
     }
 
@@ -71,16 +74,15 @@ impl State {
             if let PhysicalKey::Code(key_code) = key_event.physical_key {
                 match key_code {
                     KeyCode::KeyK => {
-                        self.max_iterations = self.max_iterations.saturating_add(5);
+                        self.max_iterations = self
+                            .max_iterations
+                            .saturating_mul(NonZeroU32::new(2).unwrap_or(self.max_iterations));
 
                         true
                     }
                     KeyCode::KeyL => {
-                        if let Some(sub_result) = self.max_iterations.get().checked_sub(5) {
-                            if sub_result > 0 {
-                                self.max_iterations = NonZeroU32::new(sub_result).unwrap();
-                            }
-                        }
+                        self.max_iterations =
+                            NonZeroU32::new(self.max_iterations.get() / 2).unwrap_or(self.max_iterations);
                         true
                     }
                     _ => false,

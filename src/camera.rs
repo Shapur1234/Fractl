@@ -1,6 +1,6 @@
 use std::num::NonZeroU32;
 
-use cgmath::{num_traits::Signed, Vector2};
+use cgmath::Vector2;
 use winit::{
     event::{ElementState, KeyEvent},
     keyboard::{KeyCode, PhysicalKey},
