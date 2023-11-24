@@ -1,6 +1,7 @@
 use std::num::NonZeroU32;
 
 use cgmath::Vector2;
+use fontdue::Metrics;
 use winit::{
     event::{ElementState, KeyEvent},
     keyboard::{KeyCode, PhysicalKey},
@@ -66,6 +67,26 @@ impl State {
 
         for i in 0..buffer.len() {
             std::mem::swap(&mut buffer[i], &mut new_buffer[i]);
+        }
+
+        {
+            let font = include_bytes!("../resource/JetBrainsMonoNerdFont-Regular.ttf") as &[u8];
+            let font = fontdue::Font::from_bytes(font, fontdue::FontSettings::default()).unwrap();
+
+            let (metrics, bitmap) = font.rasterize('j', 200.0);
+            println!("{:?}, {:?}", metrics, bitmap.len());
+            for x in 0..metrics.width as u32 {
+                for y in 0..metrics.height as u32 {
+                    buffer[pos_to_index(&Vector2::new(x, y), &screen_size) as usize] = rgb_to_u32(
+                        bitmap[pos_to_index(
+                            &Vector2::new(x, y),
+                            &Vector2::new(metrics.width as u32, metrics.height as u32),
+                        ) as usize],
+                        0,
+                        0,
+                    );
+                }
+            }
         }
     }
 

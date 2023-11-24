@@ -14,8 +14,6 @@ use winit::{
 
 use crate::state::State;
 
-// TODO: UI - Egui?
-
 fn main() {
     let event_loop = EventLoop::new().unwrap();
     let window = Rc::new(WindowBuilder::new().build(&event_loop).unwrap());
@@ -68,6 +66,7 @@ fn main() {
                         state.resize(screen_size);
 
                         let mut buffer = surface.buffer_mut().unwrap();
+
                         state.render(&mut buffer, screen_size);
                         buffer.present().unwrap();
                     }

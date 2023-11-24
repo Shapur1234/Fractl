@@ -18,6 +18,7 @@ panic = "abort"
 [dependencies]
 cgmath = "0.18.0"
 console_error_panic_hook = "0.1.7"
+fontdue = "0.7.3"
 rayon = { version = "1.8.0", optional = true }
 softbuffer = "0.4"
 winit = "0.29"
