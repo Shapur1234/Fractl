@@ -2,15 +2,17 @@ use std::num::NonZeroU32;
 
 use cgmath::Vector2;
 
+use crate::framebuffer::Color;
+
 #[allow(dead_code)]
-pub fn mandelbrot(world_pos: Vector2<f64>, max_iterations: NonZeroU32) -> (u8, u8, u8) {
+pub fn mandelbrot(world_pos: Vector2<f64>, max_iterations: NonZeroU32) -> Color {
     // https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Optimized_escape_time_algorithms
 
     if {
         let q = (world_pos.x - 0.25).powi(2) + world_pos.y.powi(2);
         q * (q + (world_pos.x - 0.25)) <= 0.25 * world_pos.y.powi(2)
     } {
-        (0, 0, 255)
+        Color::BLUE
     } else {
         let max_iterations = max_iterations.get() as usize;
 
@@ -27,7 +29,7 @@ pub fn mandelbrot(world_pos: Vector2<f64>, max_iterations: NonZeroU32) -> (u8, u
             n += 1;
         }
 
-        (0, 0, ((n as f64 / max_iterations as f64) * 255.0) as u8)
+        Color::new(0, 0, ((n as f64 / max_iterations as f64) * 255.0) as u8)
     }
 }
 

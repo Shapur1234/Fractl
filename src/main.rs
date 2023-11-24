@@ -1,6 +1,8 @@
 mod camera;
+mod framebuffer;
 mod math;
 mod state;
+mod text;
 
 use std::{num::NonZeroU32, rc::Rc};
 
@@ -67,7 +69,12 @@ fn main() {
 
                         let mut buffer = surface.buffer_mut().unwrap();
 
-                        state.render(&mut buffer, screen_size);
+                        let mut rendered_buffer = state.render(screen_size);
+                        assert_eq!(rendered_buffer.len(), buffer.len());
+                        for i in 0..buffer.len() {
+                            std::mem::swap(&mut buffer[i], &mut rendered_buffer[i]);
+                        }
+
                         buffer.present().unwrap();
                     }
                 }
