@@ -1,13 +1,13 @@
 use std::{
     num::NonZeroU32,
-    ops::{Deref, DerefMut, Index, IndexMut},
+    ops::{Add, Deref, DerefMut, Index, IndexMut},
 };
 
 use cgmath::Vector2;
 #[cfg(feature = "rayon")]
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Color(u32);
 
 impl Color {
@@ -20,6 +20,32 @@ impl Color {
 
     pub const fn new(red: u8, green: u8, blue: u8) -> Self {
         Self((blue as u32) | ((green as u32) << 8) | ((red as u32) << 16))
+    }
+
+    #[allow(dead_code)]
+    pub fn red(&self) -> u8 {
+        ((self.0 & 0b00000000111111110000000000000000) >> 16) as u8
+    }
+
+    #[allow(dead_code)]
+    pub fn green(&self) -> u8 {
+        ((self.0 & 0b00000000000000001111111100000000) >> 8) as u8
+    }
+
+    #[allow(dead_code)]
+    pub fn blue(&self) -> u8 {
+        (self.0 & 0b00000000000000000000000011111111) as u8
+    }
+
+    #[allow(dead_code)]
+    pub fn scale(&self, times: f32) -> Self {
+        assert!(times.is_finite() && (0.0..=1.0).contains(&times));
+
+        Self::new(
+            (self.red() as f32 * times) as u8,
+            (self.green() as f32 * times) as u8,
+            (self.blue() as f32 * times) as u8,
+        )
     }
 }
 
@@ -34,6 +60,24 @@ impl Deref for Color {
 impl DerefMut for Color {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
+    }
+}
+
+impl Default for Color {
+    fn default() -> Self {
+        Self::new(255, 255, 255)
+    }
+}
+
+impl Add for Color {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self::new(
+            self.red().saturating_add(rhs.red()),
+            self.green().saturating_add(rhs.green()),
+            self.blue().saturating_add(rhs.blue()),
+        )
     }
 }
 
@@ -70,8 +114,29 @@ impl FrameBuffer {
         };
     }
 
-    pub fn to_raw(self) -> Vec<u32> {
-        self.data.into_iter().map(|color| *color).collect()
+    pub fn raw(self) -> Vec<u32> {
+        /// SOURCE: https://users.rust-lang.org/t/current-meta-converting-vec-u-vec-t-where/86603/5
+        ///
+        /// Transmutes `Vec<T>` into `Vec<S>` in-place, without reallocation. The resulting
+        /// vector has the same length and capacity.
+        ///
+        /// SAFETY: the types `T` and `S` must be transmute-compatible (same layout, and every
+        /// representation of `T` must be a valid representation of some value in `S`).
+        unsafe fn transform<T, S>(mut v: Vec<T>) -> Vec<S> {
+            let len = v.len();
+            let capacity = v.capacity();
+            let ptr = v.as_mut_ptr().cast::<S>();
+            // We must forget the original vector, otherwise it would deallocate the buffer on drop.
+            std::mem::forget(v);
+            // This is safe, because we are reusing a valid allocation of the same byte size.
+            // The first `len` elements of `S` in this allocation must be initialized, which is
+            // true since `size_of::<T>() == size_of::<S>()`, the first `len` elements of `T` are
+            // initialized due the safety invariants of `Vec<T>`, and `T` and `S` being
+            // transmute-compatible by the safety assumptions of this function.
+            Vec::from_raw_parts(ptr, len, capacity)
+        }
+
+        unsafe { transform::<Color, u32>(self.data) }
     }
 
     pub fn size(&self) -> &Vector2<u32> {

@@ -10,7 +10,7 @@ use crate::{
     camera::Camera,
     framebuffer::{Color, Draw, FrameBuffer},
     math::mandelbrot,
-    text::Text,
+    text::Label,
 };
 
 const DEFAULT_MAX_ITERATIONS: NonZeroU32 =
@@ -49,9 +49,37 @@ impl State {
             }
         });
 
-        Text::new("winit window").draw(Vector2::new(20, 100), &mut framebuffer);
+        {
+            let (start_y, line_offset) = (40, 40);
+            Label::new("Fractaller", 30.0, None).draw(Vector2::new(10, start_y + line_offset * 0), &mut framebuffer);
 
-        framebuffer.to_raw()
+            Label::new(format!("Max iterations: {:}", self.max_iterations), 25.0, None)
+                .draw(Vector2::new(10, start_y + line_offset * 2), &mut framebuffer);
+
+            Label::new(
+                format!(
+                    "Center pos: ({:.6}, {:.6})",
+                    self.camera.center_pos().x,
+                    self.camera.center_pos().y
+                ),
+                25.0,
+                None,
+            )
+            .draw(Vector2::new(10, start_y + line_offset * 3), &mut framebuffer);
+
+            Label::new(
+                format!(
+                    "View size: ({:.6}, {:.6})",
+                    self.camera.view_size().x,
+                    self.camera.view_size().y
+                ),
+                25.0,
+                None,
+            )
+            .draw(Vector2::new(10, start_y + line_offset * 4), &mut framebuffer);
+        }
+
+        framebuffer.raw()
     }
 
     fn handle_state_keyboard_input(&mut self, key_event: &KeyEvent) -> bool {

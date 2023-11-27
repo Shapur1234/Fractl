@@ -18,7 +18,12 @@ use crate::state::State;
 
 fn main() {
     let event_loop = EventLoop::new().unwrap();
-    let window = Rc::new(WindowBuilder::new().build(&event_loop).unwrap());
+    let window = Rc::new(
+        WindowBuilder::new()
+            .with_title(env!("CARGO_BIN_NAME"))
+            .build(&event_loop)
+            .unwrap(),
+    );
 
     #[cfg(target_arch = "wasm32")]
     {

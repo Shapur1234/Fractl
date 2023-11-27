@@ -27,6 +27,21 @@ impl Camera {
         }
     }
 
+    #[allow(dead_code)]
+    pub fn center_pos(&self) -> Vector2<f64> {
+        self.center_pos
+    }
+
+    #[allow(dead_code)]
+    pub fn view_size(&self) -> Vector2<f64> {
+        self.view_size.zip(self.zoom, |x, y| x / y)
+    }
+
+    #[allow(dead_code)]
+    pub fn zoom(&self) -> Vector2<f64> {
+        self.zoom
+    }
+
     pub fn resize(&mut self, new_screen_size: impl Into<Vector2<NonZeroU32>>) {
         self.view_size.x = Camera::calc_ratio(new_screen_size);
     }
