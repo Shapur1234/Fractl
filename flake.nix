@@ -44,7 +44,14 @@
           xorg.libXrandr
         ];
 
-        src = craneLib.cleanCargoSource (craneLib.path ./.);
+        src = lib.cleanSourceWith {
+          src = ./.;
+          filter = path: type:
+            (lib.hasInfix "/resource/" path) ||
+            (craneLib.filterCargoSources path type)
+          ;
+        };
+
 
         craneLib = crane.lib.${system};
 
