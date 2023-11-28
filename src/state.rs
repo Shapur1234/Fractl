@@ -9,12 +9,15 @@ use winit::{
 use crate::{
     camera::Camera,
     framebuffer::{Color, Draw, FrameBuffer},
-    math::mandelbrot_color,
+    math::{get_pixel, FractalType},
     text::Label,
 };
 
+// TODO: Separate cli, app, lib
+// TODO: Web
+
 const DEFAULT_MAX_ITERATIONS: NonZeroU32 =
-    unsafe { NonZeroU32::new_unchecked(if cfg!(debug_assertions) { 10 } else { 40 }) };
+    unsafe { NonZeroU32::new_unchecked(if cfg!(debug_assertions) { 16 } else { 64 }) };
 
 #[derive(Clone, Debug)]
 pub struct State {
@@ -42,9 +45,10 @@ impl State {
             if screen_pos == screen_size / 2 {
                 Color::RED
             } else {
-                mandelbrot_color(
+                get_pixel(
                     self.camera.screen_to_world_pos(&screen_pos, &screen_size),
                     self.max_iterations,
+                    FractalType::MandelbrotOLC,
                 )
             }
         });
@@ -90,7 +94,7 @@ impl State {
                 match key_code {
                     KeyCode::KeyK => {
                         self.max_iterations = NonZeroU32::new(
-                            (((self.max_iterations.get() as f64) * CHANGE_MAX_ITERATIONS_MULT) as i64)
+                            ((((self.max_iterations.get() as f64) * CHANGE_MAX_ITERATIONS_MULT).ceil()) as i64)
                                 .try_into()
                                 .unwrap_or_default(),
                         )
@@ -100,7 +104,7 @@ impl State {
                     }
                     KeyCode::KeyL => {
                         self.max_iterations = NonZeroU32::new(
-                            (((self.max_iterations.get() as f64) / CHANGE_MAX_ITERATIONS_MULT) as i64)
+                            ((((self.max_iterations.get() as f64) / CHANGE_MAX_ITERATIONS_MULT).ceil()) as i64)
                                 .try_into()
                                 .unwrap_or_default(),
                         )

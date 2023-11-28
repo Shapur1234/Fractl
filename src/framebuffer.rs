@@ -12,6 +12,10 @@ pub struct Color(u32);
 
 impl Color {
     #[allow(dead_code)]
+    pub const WHITE: Self = Self::new(255, 255, 255);
+    #[allow(dead_code)]
+    pub const BLACK: Self = Self::new(0, 0, 0);
+    #[allow(dead_code)]
     pub const RED: Self = Self::new(255, 0, 0);
     #[allow(dead_code)]
     pub const GREEN: Self = Self::new(0, 255, 0);
