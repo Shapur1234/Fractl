@@ -9,7 +9,7 @@ use winit::{
 use crate::{
     camera::Camera,
     framebuffer::{Color, Draw, FrameBuffer},
-    math::mandelbrot,
+    math::mandelbrot_color,
     text::Label,
 };
 
@@ -42,7 +42,7 @@ impl State {
             if screen_pos == screen_size / 2 {
                 Color::RED
             } else {
-                mandelbrot(
+                mandelbrot_color(
                     self.camera.screen_to_world_pos(&screen_pos, &screen_size),
                     self.max_iterations,
                 )
@@ -58,7 +58,7 @@ impl State {
 
             Label::new(
                 format!(
-                    "Center pos: ({:.6}, {:.6})",
+                    "Center pos: ({:}, {:})",
                     self.camera.center_pos().x,
                     self.camera.center_pos().y
                 ),
@@ -69,7 +69,7 @@ impl State {
 
             Label::new(
                 format!(
-                    "View size: ({:.6}, {:.6})",
+                    "View size: ({:}, {:})",
                     self.camera.view_size().x,
                     self.camera.view_size().y
                 ),
@@ -83,19 +83,28 @@ impl State {
     }
 
     fn handle_state_keyboard_input(&mut self, key_event: &KeyEvent) -> bool {
+        const CHANGE_MAX_ITERATIONS_MULT: f64 = 1.5;
+
         if key_event.state == ElementState::Pressed {
             if let PhysicalKey::Code(key_code) = key_event.physical_key {
                 match key_code {
                     KeyCode::KeyK => {
-                        self.max_iterations = self
-                            .max_iterations
-                            .saturating_mul(NonZeroU32::new(2).unwrap_or(self.max_iterations));
+                        self.max_iterations = NonZeroU32::new(
+                            (((self.max_iterations.get() as f64) * CHANGE_MAX_ITERATIONS_MULT) as i64)
+                                .try_into()
+                                .unwrap_or_default(),
+                        )
+                        .unwrap_or(self.max_iterations);
 
                         true
                     }
                     KeyCode::KeyL => {
-                        self.max_iterations =
-                            NonZeroU32::new(self.max_iterations.get() / 2).unwrap_or(self.max_iterations);
+                        self.max_iterations = NonZeroU32::new(
+                            (((self.max_iterations.get() as f64) / CHANGE_MAX_ITERATIONS_MULT) as i64)
+                                .try_into()
+                                .unwrap_or_default(),
+                        )
+                        .unwrap_or(self.max_iterations);
                         true
                     }
                     _ => false,
