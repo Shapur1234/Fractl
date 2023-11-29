@@ -1,8 +1,4 @@
-mod camera;
-mod framebuffer;
-mod math;
 mod state;
-mod text;
 
 use std::{num::NonZeroU32, rc::Rc};
 

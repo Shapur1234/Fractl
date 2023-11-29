@@ -1,19 +1,12 @@
 use std::num::NonZeroU32;
 
 use cgmath::Vector2;
+use fractaller::{get_pixel, Camera, Color, Draw, FractalType, FrameBuffer, Label};
 use winit::{
     event::{ElementState, KeyEvent},
     keyboard::{KeyCode, PhysicalKey},
 };
 
-use crate::{
-    camera::Camera,
-    framebuffer::{Color, Draw, FrameBuffer},
-    math::{get_pixel, FractalType},
-    text::Label,
-};
-
-// TODO: Separate cli, app, lib
 // TODO: Web
 
 const DEFAULT_MAX_ITERATIONS: NonZeroU32 =
@@ -48,7 +41,7 @@ impl State {
                 get_pixel(
                     self.camera.screen_to_world_pos(&screen_pos, &screen_size),
                     self.max_iterations,
-                    FractalType::MandelbrotOLC,
+                    FractalType::MandelbrotHistogram,
                 )
             }
         });

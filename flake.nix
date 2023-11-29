@@ -1,3 +1,4 @@
+# TODO: Add multiple apps
 {
   description = "Fractaller";
 
@@ -48,6 +49,8 @@
           src = ./.;
           filter = path: type:
             (lib.hasInfix "/resource/" path) ||
+            (lib.hasInfix "/gui/" path) ||
+            (lib.hasInfix "/cli/" path) ||
             (craneLib.filterCargoSources path type)
           ;
         };
@@ -67,7 +70,7 @@
           inherit src;
           strictDeps = true;
 
-          cargoExtraArgs = "--features rayon";
+          cargoExtraArgs = "-p gui";
 
           nativeBuildInputs = with pkgs; [
             makeWrapper
@@ -79,6 +82,7 @@
 
           LD_LIBRARY_PATH = lib.makeLibraryPath runtimeLibs;
         };
+
         cargoArtifacts = craneLib.buildDepsOnly commonArgs;
         fractaller = craneLib.buildPackage (commonArgs // {
           inherit cargoArtifacts;

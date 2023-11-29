@@ -1,0 +1,17 @@
+[package]
+name = "gui"
+version = "0.1.0"
+edition = "2021"
+authors = ["Shapur <48966182+Shapur1234@users.noreply.github.com>"]
+license = "GPL-3.0-or-later"
+repository = "https://github.com/Shapur1234/Fractaller"
+
+[dependencies]
+fractaller = { path = "../", features = [ "rayon", "winit" ] }
+cgmath = "0.18"
+console_error_panic_hook = "0.1"
+softbuffer = "0.4"
+winit = "0.29"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-sys = "0.3"

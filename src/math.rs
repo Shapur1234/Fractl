@@ -6,7 +6,7 @@ use crate::framebuffer::Color;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum FractalType {
-    ManderbrolHistogram,
+    MandelbrotHistogram,
     MandelbrotLCH,
     MandelbrotOLC,
     Circle,
@@ -15,7 +15,7 @@ pub enum FractalType {
 #[inline]
 pub fn get_pixel(world_pos: Vector2<f64>, max_iterations: NonZeroU32, fractal_type: FractalType) -> Color {
     match fractal_type {
-        FractalType::ManderbrolHistogram => {
+        FractalType::MandelbrotHistogram => {
             color_histogram(mandelbrot(world_pos, max_iterations), max_iterations.get())
         }
         FractalType::MandelbrotLCH => color_lhc(mandelbrot(world_pos, max_iterations), max_iterations.get()),

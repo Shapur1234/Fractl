@@ -1,6 +1,7 @@
 use std::num::NonZeroU32;
 
 use cgmath::Vector2;
+#[cfg(feature = "winit")]
 use winit::{
     event::{ElementState, KeyEvent},
     keyboard::{KeyCode, PhysicalKey},
@@ -51,6 +52,7 @@ impl Camera {
         new_screen_size.x / new_screen_size.y
     }
 
+    #[cfg(feature = "winit")]
     pub fn handle_keyboard_input(&mut self, key_event: &KeyEvent) -> bool {
         if key_event.state == ElementState::Pressed {
             if let PhysicalKey::Code(key_code) = key_event.physical_key {
