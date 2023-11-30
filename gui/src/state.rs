@@ -1,7 +1,7 @@
 use std::num::NonZeroU32;
 
 use cgmath::Vector2;
-use fractaller::{get_pixel, Camera, Color, Draw, FractalType, FrameBuffer, Label};
+use fractaller::{Camera, Draw, Fractal, FractalType, FrameBuffer, Label};
 use winit::{
     event::{ElementState, KeyEvent},
     keyboard::{KeyCode, PhysicalKey},
@@ -32,19 +32,9 @@ impl State {
 
     pub fn render(&self, screen_size: impl Into<Vector2<NonZeroU32>>) -> Vec<u32> {
         let mut framebuffer = FrameBuffer::new(screen_size.into());
-        let screen_size = *framebuffer.size();
 
-        framebuffer.map_pixels(|screen_pos| {
-            if screen_pos == screen_size / 2 {
-                Color::RED
-            } else {
-                get_pixel(
-                    self.camera.screen_to_world_pos(&screen_pos, &screen_size),
-                    self.max_iterations,
-                    FractalType::MandelbrotHistogram,
-                )
-            }
-        });
+        Fractal::new(FractalType::MandelbrotOLC, self.camera.clone(), self.max_iterations)
+            .draw(Vector2::new(0, 0), &mut framebuffer);
 
         {
             let (start_y, line_offset) = (40, 40);

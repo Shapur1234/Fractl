@@ -1,10 +1,12 @@
 use std::{f64::consts::PI, num::NonZeroU32};
 
 use cgmath::Vector2;
+#[cfg(feature = "rayon")]
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
-use crate::framebuffer::Color;
+use crate::{framebuffer::Color, Camera, Draw};
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum FractalType {
     MandelbrotHistogram,
     MandelbrotLCH,
@@ -12,8 +14,56 @@ pub enum FractalType {
     Circle,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct Fractal {
+    kind: FractalType,
+    camera: Camera,
+    max_iterations: NonZeroU32,
+}
+
+impl Fractal {
+    pub fn new(kind: FractalType, camera: Camera, max_iterations: NonZeroU32) -> Self {
+        Self {
+            kind,
+            camera,
+            max_iterations,
+        }
+    }
+}
+
+impl Draw for Fractal {
+    fn draw(&self, pos: Vector2<u32>, buffer: &mut crate::FrameBuffer) {
+        // TODO: Impl size bounds
+
+        buffer.data = {
+            let range = 0..buffer.size().x * buffer.size().y;
+
+            #[cfg(not(feature = "rayon"))]
+            let iterator = range.into_iter();
+
+            #[cfg(feature = "rayon")]
+            let iterator = range.into_par_iter();
+
+            iterator
+                .map(|index| {
+                    let screen_pos = buffer.index_to_pos(index);
+                    if screen_pos == buffer.size() / 2 {
+                        Color::RED
+                    } else {
+                        get_pixel(
+                            self.camera.screen_to_world_pos(&(screen_pos + pos), buffer.size()),
+                            self.max_iterations,
+                            self.kind,
+                        )
+                    }
+                })
+                .collect::<Vec<_>>()
+        }
+    }
+}
+
 #[inline]
-pub fn get_pixel(world_pos: Vector2<f64>, max_iterations: NonZeroU32, fractal_type: FractalType) -> Color {
+fn get_pixel(world_pos: Vector2<f64>, max_iterations: NonZeroU32, fractal_type: FractalType) -> Color {
     match fractal_type {
         FractalType::MandelbrotHistogram => {
             color_histogram(mandelbrot(world_pos, max_iterations), max_iterations.get())

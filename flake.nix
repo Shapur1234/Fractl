@@ -49,8 +49,6 @@
           src = ./.;
           filter = path: type:
             (lib.hasInfix "/resource/" path) ||
-            (lib.hasInfix "/gui/" path) ||
-            (lib.hasInfix "/cli/" path) ||
             (craneLib.filterCargoSources path type)
           ;
         };
@@ -70,7 +68,11 @@
           inherit src;
           strictDeps = true;
 
-          cargoExtraArgs = "-p gui";
+          pname = "gui";
+          version = "0.1.0";
+          cargoExtraArgs = "--package=gui";
+
+          # cargoExtraArgs = "";
 
           nativeBuildInputs = with pkgs; [
             makeWrapper

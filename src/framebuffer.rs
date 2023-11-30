@@ -4,8 +4,8 @@ use std::{
 };
 
 use cgmath::Vector2;
-#[cfg(feature = "rayon")]
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
+#[cfg(feature = "image")]
+use image::{Rgb, RgbImage};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Color(u32);
@@ -87,7 +87,7 @@ impl Add for Color {
 
 #[derive(Clone, Debug, Hash)]
 pub struct FrameBuffer {
-    data: Vec<Color>,
+    pub(crate) data: Vec<Color>,
     size: Vector2<u32>,
 }
 
@@ -105,13 +105,8 @@ impl FrameBuffer {
         self.data = {
             let range = 0..self.size.x * self.size.y;
 
-            #[cfg(not(feature = "rayon"))]
-            let iterator = range.into_iter();
-
-            #[cfg(feature = "rayon")]
-            let iterator = range.into_par_iter();
-
-            iterator
+            range
+                .into_iter()
                 .map(|index| self.index_to_pos(index))
                 .map(f)
                 .collect::<Vec<_>>()
@@ -119,7 +114,7 @@ impl FrameBuffer {
     }
 
     pub fn raw(self) -> Vec<u32> {
-        /// SOURCE: https://users.rust-lang.org/t/current-meta-converting-vec-u-vec-t-where/86603/5
+        /// https://users.rust-lang.org/t/current-meta-converting-vec-u-vec-t-where/86603/5
         ///
         /// Transmutes `Vec<T>` into `Vec<S>` in-place, without reallocation. The resulting
         /// vector has the same length and capacity.
@@ -143,17 +138,31 @@ impl FrameBuffer {
         unsafe { transform::<Color, u32>(self.data) }
     }
 
+    #[cfg(feature = "image")]
+    pub fn as_image(&self) -> RgbImage {
+        let mut img = RgbImage::new(self.size().x, self.size().y);
+
+        for x in 0..self.size().x {
+            for y in 0..self.size().y {
+                let color = self[Vector2::new(x, y)];
+                img.put_pixel(x, y, Rgb([color.red(), color.green(), color.blue()]));
+            }
+        }
+
+        img
+    }
+
     pub fn size(&self) -> &Vector2<u32> {
         &self.size
     }
 
     #[allow(dead_code)]
-    fn pos_to_index(&self, buffer_pos: Vector2<u32>) -> u32 {
+    pub fn pos_to_index(&self, buffer_pos: Vector2<u32>) -> u32 {
         buffer_pos.y * self.size.x + buffer_pos.x
     }
 
     #[allow(dead_code)]
-    fn index_to_pos(&self, index: u32) -> Vector2<u32> {
+    pub fn index_to_pos(&self, index: u32) -> Vector2<u32> {
         let x = index % self.size.x;
         let y = (index - x) / self.size.x;
 

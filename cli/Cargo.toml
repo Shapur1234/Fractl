@@ -7,3 +7,6 @@ license = "GPL-3.0-or-later"
 repository = "https://github.com/Shapur1234/Fractaller"
 
 [dependencies]
+fractaller = { path = "../", features = [ "image", "rayon" ] }
+cgmath = "0.18.0"
+image = "0.24"

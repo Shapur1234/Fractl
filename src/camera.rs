@@ -15,9 +15,13 @@ pub struct Camera {
 }
 
 impl Camera {
+    #[allow(dead_code)]
     const MOVE_INCREMENT: f64 = 0.005;
+    #[allow(dead_code)]
     const ZOOM_INCREMENT: f64 = 0.02;
+    #[allow(dead_code)]
     const MIN_ZOOM: f64 = 0.1;
+    #[allow(dead_code)]
     const MAX_ZOOM: f64 = f64::MAX;
 
     pub fn new(screen_size: impl Into<Vector2<NonZeroU32>>) -> Self {
@@ -41,6 +45,13 @@ impl Camera {
     #[allow(dead_code)]
     pub fn zoom(&self) -> Vector2<f64> {
         self.zoom
+    }
+
+    #[allow(dead_code)]
+    pub fn set_zoom(&mut self, new_zoom: Vector2<f64>) {
+        // TODO: Check max
+        assert!(new_zoom.x.is_finite() && new_zoom.y.is_finite());
+        self.zoom = new_zoom;
     }
 
     pub fn resize(&mut self, new_screen_size: impl Into<Vector2<NonZeroU32>>) {
