@@ -1,7 +1,7 @@
 use std::num::NonZeroU32;
 
 use cgmath::Vector2;
-use fractaller::{Camera, Draw, Fractal, FractalType, FrameBuffer, Label};
+use lib::{Camera, Draw, Fractal, FractalType, FrameBuffer, Label};
 use winit::{
     event::{ElementState, KeyEvent},
     keyboard::{KeyCode, PhysicalKey},

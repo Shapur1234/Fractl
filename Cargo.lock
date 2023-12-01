@@ -253,8 +253,8 @@ name = "cli"
 version = "0.1.0"
 dependencies = [
  "cgmath",
- "fractaller",
  "image",
+ "lib",
 ]
 
 [[package]]
@@ -592,18 +592,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa9a19cbb55df58761df49b23516a86d432839add4af60fc256da840f66ed35b"
 
 [[package]]
-name = "fractaller"
-version = "0.1.0"
-dependencies = [
- "cgmath",
- "fontdue",
- "image",
- "lazy_static",
- "rayon",
- "winit",
-]
-
-[[package]]
 name = "gethostname"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -640,7 +628,7 @@ version = "0.1.0"
 dependencies = [
  "cgmath",
  "console_error_panic_hook",
- "fractaller",
+ "lib",
  "softbuffer",
  "web-sys",
  "winit",
@@ -770,6 +758,18 @@ name = "lebe"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "03087c2bad5e1034e8cace5926dec053fb3790248370865f5117a7d0213354c8"
+
+[[package]]
+name = "lib"
+version = "0.1.0"
+dependencies = [
+ "cgmath",
+ "fontdue",
+ "image",
+ "lazy_static",
+ "rayon",
+ "winit",
+]
 
 [[package]]
 name = "libc"

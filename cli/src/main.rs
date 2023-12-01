@@ -1,13 +1,13 @@
 use std::num::NonZeroU32;
 
 use cgmath::Vector2;
-use fractaller::{Camera, Draw, Fractal, FrameBuffer};
 use image::{save_buffer_with_format, ColorType, ImageFormat};
+use lib::{Camera, Draw, Fractal, FrameBuffer};
 
-const OUTPUT_SIZE: Vector2<NonZeroU32> = Vector2::new(unsafe { NonZeroU32::new_unchecked(3840) }, unsafe {
-    NonZeroU32::new_unchecked(2160)
+const OUTPUT_SIZE: Vector2<NonZeroU32> = Vector2::new(unsafe { NonZeroU32::new_unchecked(1920 * 32) }, unsafe {
+    NonZeroU32::new_unchecked(1080 * 32)
 });
-const MAX_ITERATIONS: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(1000) };
+const MAX_ITERATIONS: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(4000) };
 const ZOOM_LEVEL: Vector2<f64> = Vector2::new(0.4, 0.4);
 
 fn main() {
