@@ -1,4 +1,3 @@
-# TODO: Add multiple apps
 {
   description = "Fractaller";
 
@@ -10,40 +9,28 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    fenix = {
-      url = "github:nix-community/fenix";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.rust-analyzer-src.follows = "";
-    };
-
     flake-utils.url = "github:numtide/flake-utils";
 
-    advisory-db = {
-      url = "github:rustsec/advisory-db";
-      flake = false;
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-utils.follows = "flake-utils";
+      };
     };
-
   };
 
-  outputs = { self, nixpkgs, crane, fenix, flake-utils, advisory-db, ... }:
+  outputs = { self, nixpkgs, crane, flake-utils, rust-overlay, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [ ];
+          overlays = [ (import rust-overlay) ];
         };
+
         inherit (pkgs) lib;
 
-        runtimeLibs = with pkgs; [
-          wayland
-          wayland-protocols
-
-          libxkbcommon
-          xorg.libX11
-          xorg.libXcursor
-          xorg.libXi
-          xorg.libXrandr
-        ];
+        craneLib = crane.lib.${system};
 
         src = lib.cleanSourceWith {
           src = ./.;
@@ -53,74 +40,92 @@
           ;
         };
 
-
-        craneLib = crane.lib.${system};
-
-        craneLibLLvmTools = craneLib.overrideToolchain
-          (fenix.packages.${system}.complete.withComponents [
-            "cargo"
-            "llvm-tools"
-            "rustc"
-          ]);
-
+        LD_LIBRARY_PATH = lib.makeLibraryPath (with pkgs; [
+          libxkbcommon
+          xorg.libX11
+          xorg.libXcursor
+          xorg.libXi
+          xorg.libXrandr
+        ]);
 
         commonArgs = {
           inherit src;
           strictDeps = true;
 
-          pname = "gui";
+          pname = "fractl";
           version = "0.1.0";
-          cargoExtraArgs = "--package=gui";
 
-          # cargoExtraArgs = "";
-
-          nativeBuildInputs = with pkgs; [
-            makeWrapper
-          ];
           buildInputs = [
           ] ++ lib.optionals pkgs.stdenv.isDarwin [
             pkgs.libiconv
           ];
-
-          LD_LIBRARY_PATH = lib.makeLibraryPath runtimeLibs;
         };
 
-        cargoArtifacts = craneLib.buildDepsOnly commonArgs;
-        fractaller = craneLib.buildPackage (commonArgs // {
-          inherit cargoArtifacts;
+        cliArgs = commonArgs // {
+          pname = "fractl-cli";
+          cargoExtraArgs = "--package=fractl-cli";
+        };
+
+        guiArgs = commonArgs // {
+          pname = "fractl-gui";
+          cargoExtraArgs = "--package=fractl-gui";
+
+          nativeBuildInputs = with pkgs; [
+            makeWrapper
+          ];
+
+          inherit LD_LIBRARY_PATH;
+        };
+
+        cliCargoArtifacts = craneLib.buildDepsOnly cliArgs;
+        guiCargoArtifacts = craneLib.buildDepsOnly guiArgs;
+
+        cliCrate = craneLib.buildPackage (cliArgs // {
+          cargoArtifacts = cliCargoArtifacts;
+        });
+        guiCrate = craneLib.buildPackage (guiArgs // {
+          cargoArtifacts = guiCargoArtifacts;
 
           postInstall = ''
-            wrapProgram "$out/bin/fractaller" --set LD_LIBRARY_PATH ${lib.makeLibraryPath runtimeLibs};
+            wrapProgram "$out/bin/fractl-gui" --set LD_LIBRARY_PATH ${LD_LIBRARY_PATH};
           '';
+        });
+
+
+        cliCrateClippy = craneLib.cargoClippy (cliArgs // {
+          inherit src;
+          cargoArtifacts = cliCargoArtifacts;
+
+          cargoClippyExtraArgs = "-- --deny warnings";
+        });
+        guiCrateClippy = craneLib.cargoClippy (guiArgs // {
+          inherit src;
+          cargoArtifacts = guiCargoArtifacts;
+
+          cargoClippyExtraArgs = "-- --deny warnings";
         });
       in
       {
         checks = {
-          my-crate = fractaller;
+          inherit
+            cliCrate
+            cliCrateClippy
+            guiCrate
+            guiCrateClippy;
 
-          my-crate-clippy = craneLib.cargoClippy (commonArgs // {
-            inherit cargoArtifacts;
-            cargoClippyExtraArgs = "--all-targets -- --deny warnings";
-          });
-
-          my-crate-fmt = craneLib.cargoFmt {
-            inherit src;
-          };
-
-          my-crate-audit = craneLib.cargoAudit {
-            inherit src advisory-db;
-          };
+          fmt = craneLib.cargoFmt commonArgs;
         };
 
-        packages = {
-          default = fractaller;
-          my-crate-llvm-coverage = craneLibLLvmTools.cargoLlvmCov (commonArgs // {
-            inherit cargoArtifacts;
-          });
-        };
+        apps = {
+          fractl-cli = flake-utils.lib.mkApp {
+            name = "fractl-cli";
+            drv = cliCrate;
+          };
 
-        apps.default = flake-utils.lib.mkApp {
-          drv = fractaller;
+          fractl-gui = flake-utils.lib.mkApp {
+            name = "fractl-gui";
+            drv = guiCrate;
+          };
         };
 
         devShells.default = craneLib.devShell {
@@ -132,7 +137,8 @@
             gdb
           ];
 
-          LD_LIBRARY_PATH = lib.makeLibraryPath runtimeLibs;
+          inherit LD_LIBRARY_PATH;
         };
-      });
+      }
+    );
 }

@@ -2,8 +2,8 @@
 resolver = "2"
 members = [
   "lib",
-  "gui",
-  "cli"
+  "fractl-gui",
+  "fractl-cli"
 ]
 
 [profile.release]

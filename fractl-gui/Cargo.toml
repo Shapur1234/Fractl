@@ -1,5 +1,5 @@
 [package]
-name = "gui"
+name = "fractl-gui"
 version = "0.1.0"
 edition = "2021"
 authors = ["Shapur <48966182+Shapur1234@users.noreply.github.com>"]
