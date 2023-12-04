@@ -92,7 +92,7 @@
           inherit LD_LIBRARY_PATH;
         };
         wasmArgs = commonArgs // {
-          pname = "fractl-gui-wasm";
+          pname = "fractl-wasm";
           cargoExtraArgs = "--package=fractl-gui";
 
           trunkIndexPath = "fractl-gui/index.html";
