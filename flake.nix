@@ -4,6 +4,12 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
+
+    # The version of wasm-bindgen-cli needs to match the version in Cargo.lock
+    # Update this to include the version you need
+    nixpkgs-for-wasm-bindgen.url = "github:NixOS/nixpkgs/067e11fb004fd21f18000b20e724eededd649544";
+
+
     crane = {
       url = "github:ipetkov/crane";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -20,7 +26,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, crane, flake-utils, rust-overlay, ... }:
+  outputs = { self, nixpkgs, crane, flake-utils, rust-overlay, nixpkgs-for-wasm-bindgen, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
@@ -30,11 +36,21 @@
 
         inherit (pkgs) lib;
 
-        craneLib = crane.lib.${system};
+
+        rustToolchain = pkgs.rust-bin.stable.latest.default.override {
+          targets = [ "wasm32-unknown-unknown" ];
+          extensions = [ "rust-src" ];
+        };
+        craneLib = ((crane.mkLib pkgs).overrideToolchain rustToolchain).overrideScope' (_final: _prev: {
+          # The version of wasm-bindgen-cli needs to match the version in Cargo.lock. You
+          # can unpin this if your nixpkgs commit contains the appropriate wasm-bindgen-cli version
+          inherit (import nixpkgs-for-wasm-bindgen { inherit system; }) wasm-bindgen-cli;
+        });
 
         src = lib.cleanSourceWith {
           src = ./.;
           filter = path: type:
+            (lib.hasSuffix "\.html" path) ||
             (lib.hasInfix "/resource/" path) ||
             (craneLib.filterCargoSources path type)
           ;
@@ -63,9 +79,8 @@
 
         cliArgs = commonArgs // {
           pname = "fractl-cli";
-          cargoExtraArgs = "--package=fractl-cli";
+          cargoExtraArgs = "--package=fractl-cli ";
         };
-
         guiArgs = commonArgs // {
           pname = "fractl-gui";
           cargoExtraArgs = "--package=fractl-gui";
@@ -76,9 +91,20 @@
 
           inherit LD_LIBRARY_PATH;
         };
+        wasmArgs = commonArgs // {
+          pname = "fractl-gui-wasm";
+          cargoExtraArgs = "--package=fractl-gui";
+
+          trunkIndexPath = "fractl-gui/index.html";
+
+          CARGO_BUILD_TARGET = "wasm32-unknown-unknown";
+        };
 
         cliCargoArtifacts = craneLib.buildDepsOnly cliArgs;
         guiCargoArtifacts = craneLib.buildDepsOnly guiArgs;
+        wasmCargoArtifacts = craneLib.buildDepsOnly (wasmArgs // {
+          doCheck = false;
+        });
 
         cliCrate = craneLib.buildPackage (cliArgs // {
           cargoArtifacts = cliCargoArtifacts;
@@ -90,7 +116,13 @@
             wrapProgram "$out/bin/fractl-gui" --set LD_LIBRARY_PATH ${LD_LIBRARY_PATH};
           '';
         });
+        wasmCrate = craneLib.buildTrunkPackage (wasmArgs // {
+          cargoArtifacts = wasmCargoArtifacts;
+        });
 
+        serveWasm = pkgs.writeShellScriptBin "fractl-wasm" ''
+          ${pkgs.python3Minimal}/bin/python3 -m http.server --directory ${wasmCrate} 8000
+        '';
 
         cliCrateClippy = craneLib.cargoClippy (cliArgs // {
           inherit src;
@@ -111,7 +143,8 @@
             cliCrate
             cliCrateClippy
             guiCrate
-            guiCrateClippy;
+            guiCrateClippy
+            wasmCrate;
 
           fmt = craneLib.cargoFmt commonArgs;
         };
@@ -119,6 +152,7 @@
         packages = {
           fractl-cli = cliCrate;
           fractl-gui = guiCrate;
+          fractl-wasm = wasmCrate;
         };
 
         apps = {
@@ -126,10 +160,13 @@
             name = "fractl-cli";
             drv = cliCrate;
           };
-
           fractl-gui = flake-utils.lib.mkApp {
             name = "fractl-gui";
             drv = guiCrate;
+          };
+          fractl-wasm = flake-utils.lib.mkApp {
+            name = "fractl-wasm";
+            drv = serveWasm;
           };
         };
 
@@ -137,6 +174,7 @@
           checks = self.checks.${system};
 
           packages = with pkgs;[
+            trunk
             cargo-flamegraph
             cargo-outdated
             gdb
@@ -147,3 +185,4 @@
       }
     );
 }
+
