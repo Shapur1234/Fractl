@@ -116,6 +116,11 @@
           fmt = craneLib.cargoFmt commonArgs;
         };
 
+        packages = {
+          fractl-cli = cliCrate;
+          fractl-gui = guiCrate;
+        };
+
         apps = {
           fractl-cli = flake-utils.lib.mkApp {
             name = "fractl-cli";
