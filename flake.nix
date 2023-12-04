@@ -51,7 +51,8 @@
           src = ./.;
           filter = path: type:
             (lib.hasSuffix "\.html" path) ||
-            (lib.hasInfix "/resource/" path) ||
+            (lib.hasSuffix "\.css" path) ||
+            (lib.hasSuffix "\.ttf" path) ||
             (craneLib.filterCargoSources path type)
           ;
         };
@@ -95,7 +96,7 @@
           pname = "fractl-wasm";
           cargoExtraArgs = "--package=fractl-gui";
 
-          trunkIndexPath = "fractl-gui/index.html";
+          trunkIndexPath = "fractl-gui/web/index.html";
 
           CARGO_BUILD_TARGET = "wasm32-unknown-unknown";
         };
