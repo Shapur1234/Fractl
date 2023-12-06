@@ -26,22 +26,18 @@ impl Color {
         Self((blue as u32) | ((green as u32) << 8) | ((red as u32) << 16))
     }
 
-    #[allow(dead_code)]
-    pub fn red(&self) -> u8 {
+    pub const fn red(&self) -> u8 {
         ((self.0 & 0b00000000111111110000000000000000) >> 16) as u8
     }
 
-    #[allow(dead_code)]
-    pub fn green(&self) -> u8 {
+    pub const fn green(&self) -> u8 {
         ((self.0 & 0b00000000000000001111111100000000) >> 8) as u8
     }
 
-    #[allow(dead_code)]
-    pub fn blue(&self) -> u8 {
+    pub const fn blue(&self) -> u8 {
         (self.0 & 0b00000000000000000000000011111111) as u8
     }
 
-    #[allow(dead_code)]
     pub fn scale(&self, times: f32) -> Self {
         assert!(times.is_finite() && (0.0..=1.0).contains(&times));
 
@@ -50,6 +46,10 @@ impl Color {
             (self.green() as f32 * times) as u8,
             (self.blue() as f32 * times) as u8,
         )
+    }
+
+    pub const fn invert(&self) -> Self {
+        Self::new(255 - self.red(), 255 - self.green(), 255 - self.blue())
     }
 }
 
@@ -114,24 +114,14 @@ impl FrameBuffer {
     }
 
     pub fn raw(self) -> Vec<u32> {
-        /// https://users.rust-lang.org/t/current-meta-converting-vec-u-vec-t-where/86603/5
-        ///
-        /// Transmutes `Vec<T>` into `Vec<S>` in-place, without reallocation. The resulting
-        /// vector has the same length and capacity.
-        ///
-        /// SAFETY: the types `T` and `S` must be transmute-compatible (same layout, and every
-        /// representation of `T` must be a valid representation of some value in `S`).
+        // https://users.rust-lang.org/t/current-meta-converting-vec-u-vec-t-where/86603/5
         unsafe fn transform<T, S>(mut v: Vec<T>) -> Vec<S> {
             let len = v.len();
             let capacity = v.capacity();
             let ptr = v.as_mut_ptr().cast::<S>();
-            // We must forget the original vector, otherwise it would deallocate the buffer on drop.
+
             std::mem::forget(v);
-            // This is safe, because we are reusing a valid allocation of the same byte size.
-            // The first `len` elements of `S` in this allocation must be initialized, which is
-            // true since `size_of::<T>() == size_of::<S>()`, the first `len` elements of `T` are
-            // initialized due the safety invariants of `Vec<T>`, and `T` and `S` being
-            // transmute-compatible by the safety assumptions of this function.
+
             Vec::from_raw_parts(ptr, len, capacity)
         }
 

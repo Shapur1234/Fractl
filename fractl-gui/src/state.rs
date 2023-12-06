@@ -7,22 +7,28 @@ use winit::{
     keyboard::{KeyCode, PhysicalKey},
 };
 
-// TODO: Web
-
 const DEFAULT_MAX_ITERATIONS: NonZeroU32 =
     unsafe { NonZeroU32::new_unchecked(if cfg!(debug_assertions) { 16 } else { 64 }) };
+const DEFAULT_SHOW_CROSSHAIR: bool = true;
+const DEFAULT_SHOW_UI: bool = true;
 
 #[derive(Clone, Debug)]
 pub struct State {
     camera: Camera,
+    selected_fractal: FractalType,
     max_iterations: NonZeroU32,
+    show_crosshair: bool,
+    show_ui: bool,
 }
 
 impl State {
     pub fn new(screen_size: impl Into<Vector2<NonZeroU32>>) -> Self {
         Self {
             camera: Camera::new(screen_size),
+            selected_fractal: FractalType::default(),
             max_iterations: DEFAULT_MAX_ITERATIONS,
+            show_crosshair: DEFAULT_SHOW_CROSSHAIR,
+            show_ui: DEFAULT_SHOW_UI,
         }
     }
 
@@ -33,15 +39,33 @@ impl State {
     pub fn render(&self, screen_size: impl Into<Vector2<NonZeroU32>>) -> Vec<u32> {
         let mut framebuffer = FrameBuffer::new(screen_size.into());
 
-        Fractal::new(FractalType::MandelbrotOLC, self.camera.clone(), self.max_iterations)
+        Fractal::new(self.selected_fractal, self.camera.clone(), self.max_iterations)
             .draw(Vector2::new(0, 0), &mut framebuffer);
 
-        {
+        if self.show_crosshair {
+            const CROSSHAIR_SIZE: i64 = 5;
+
+            let center = (framebuffer.size() / 2).map(|x| x as i64);
+            for x in -CROSSHAIR_SIZE..=CROSSHAIR_SIZE {
+                for y in -CROSSHAIR_SIZE..=CROSSHAIR_SIZE {
+                    let current_pixel = Vector2::new((center.x + x) as u32, (center.y + y) as u32);
+
+                    if x == 0 || y == 0 {
+                        framebuffer[current_pixel] = framebuffer[current_pixel].invert();
+                    }
+                }
+            }
+        }
+
+        if self.show_ui {
             let (start_y, line_offset) = (40, 40);
             Label::new("Fractaller", 30.0, None).draw(Vector2::new(10, start_y + line_offset * 0), &mut framebuffer);
 
-            Label::new(format!("Max iterations: {:}", self.max_iterations), 25.0, None)
+            Label::new(format!("Selected fractal: {:}", self.selected_fractal), 25.0, None)
                 .draw(Vector2::new(10, start_y + line_offset * 2), &mut framebuffer);
+
+            Label::new(format!("Max iterations: {:}", self.max_iterations), 25.0, None)
+                .draw(Vector2::new(10, start_y + line_offset * 3), &mut framebuffer);
 
             Label::new(
                 format!(
@@ -52,7 +76,7 @@ impl State {
                 25.0,
                 None,
             )
-            .draw(Vector2::new(10, start_y + line_offset * 3), &mut framebuffer);
+            .draw(Vector2::new(10, start_y + line_offset * 4), &mut framebuffer);
 
             Label::new(
                 format!(
@@ -63,7 +87,7 @@ impl State {
                 25.0,
                 None,
             )
-            .draw(Vector2::new(10, start_y + line_offset * 4), &mut framebuffer);
+            .draw(Vector2::new(10, start_y + line_offset * 5), &mut framebuffer);
         }
 
         framebuffer.raw()
@@ -92,6 +116,26 @@ impl State {
                                 .unwrap_or_default(),
                         )
                         .unwrap_or(self.max_iterations);
+                        true
+                    }
+                    KeyCode::KeyN => {
+                        self.selected_fractal = self.selected_fractal.prev();
+
+                        true
+                    }
+                    KeyCode::KeyM => {
+                        self.selected_fractal = self.selected_fractal.next();
+
+                        true
+                    }
+                    KeyCode::KeyC => {
+                        self.show_crosshair ^= true;
+
+                        true
+                    }
+                    KeyCode::KeyU => {
+                        self.show_ui ^= true;
+
                         true
                     }
                     _ => false,

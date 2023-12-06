@@ -1,4 +1,4 @@
-use std::{f64::consts::PI, num::NonZeroU32};
+use std::{f64::consts::PI, fmt::Display, num::NonZeroU32};
 
 use cgmath::Vector2;
 #[cfg(feature = "rayon")]
@@ -6,12 +6,46 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 use crate::{framebuffer::Color, Camera, Draw};
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum FractalType {
+    #[default]
     MandelbrotHistogram,
     MandelbrotLCH,
     MandelbrotOLC,
     Circle,
+}
+
+impl FractalType {
+    pub const fn next(&self) -> Self {
+        match self {
+            Self::MandelbrotHistogram => Self::MandelbrotLCH,
+            Self::MandelbrotLCH => Self::MandelbrotOLC,
+            Self::MandelbrotOLC => Self::Circle,
+            Self::Circle => Self::MandelbrotHistogram,
+        }
+    }
+
+    pub const fn prev(&self) -> Self {
+        match self {
+            Self::MandelbrotHistogram => Self::Circle,
+            Self::MandelbrotLCH => Self::MandelbrotHistogram,
+            Self::MandelbrotOLC => Self::MandelbrotLCH,
+            Self::Circle => Self::MandelbrotOLC,
+        }
+    }
+}
+
+impl Display for FractalType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FractalType::MandelbrotHistogram => write!(f, "Mandelbrot - Histogram"),
+            FractalType::MandelbrotLCH => write!(f, "Mandelbrot - LCH"),
+            FractalType::MandelbrotOLC => write!(f, "Mandelbrot - OLC"),
+            FractalType::Circle => write!(f, "Circle"),
+        }?;
+
+        Ok(())
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -47,15 +81,12 @@ impl Draw for Fractal {
             iterator
                 .map(|index| {
                     let screen_pos = buffer.index_to_pos(index);
-                    if screen_pos == buffer.size() / 2 {
-                        Color::RED
-                    } else {
-                        get_pixel(
-                            self.camera.screen_to_world_pos(&(screen_pos + pos), buffer.size()),
-                            self.max_iterations,
-                            self.kind,
-                        )
-                    }
+
+                    get_pixel(
+                        self.camera.screen_to_world_pos(&(screen_pos + pos), buffer.size()),
+                        self.max_iterations,
+                        self.kind,
+                    )
                 })
                 .collect::<Vec<_>>()
         }
@@ -137,7 +168,11 @@ fn color_olc(n: u32, _max_iterations: u32) -> Color {
 #[allow(dead_code)]
 fn circle(world_pos: Vector2<f64>, _: NonZeroU32) -> Color {
     if world_pos.x.powi(2) + world_pos.y.powi(2) <= 1.0 {
-        Color::WHITE
+        Color::new(
+            ((world_pos.x.cos() + 1.0) * (255.0 / 2.0)) as u8,
+            ((world_pos.x.sin() + 1.0) * (255.0 / 2.0)) as u8,
+            ((world_pos.y.sin() + 1.0) * (255.0 / 2.0)) as u8,
+        )
     } else {
         Color::BLACK
     }
