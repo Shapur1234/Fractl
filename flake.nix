@@ -4,11 +4,9 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
-
     # The version of wasm-bindgen-cli needs to match the version in Cargo.lock
     # Update this to include the version you need
     nixpkgs-for-wasm-bindgen.url = "github:NixOS/nixpkgs/067e11fb004fd21f18000b20e724eededd649544";
-
 
     crane = {
       url = "github:ipetkov/crane";
@@ -36,23 +34,20 @@
 
         inherit (pkgs) lib;
 
-
         rustToolchain = pkgs.rust-bin.stable.latest.default.override {
           targets = [ "wasm32-unknown-unknown" ];
           extensions = [ "rust-src" ];
         };
         craneLib = ((crane.mkLib pkgs).overrideToolchain rustToolchain).overrideScope' (_final: _prev: {
-          # The version of wasm-bindgen-cli needs to match the version in Cargo.lock. You
-          # can unpin this if your nixpkgs commit contains the appropriate wasm-bindgen-cli version
           inherit (import nixpkgs-for-wasm-bindgen { inherit system; }) wasm-bindgen-cli;
         });
 
         src = lib.cleanSourceWith {
           src = ./.;
           filter = path: type:
+            (lib.hasSuffix "\.ttf" path) ||
             (lib.hasSuffix "\.html" path) ||
             (lib.hasSuffix "\.css" path) ||
-            (lib.hasSuffix "\.ttf" path) ||
             (craneLib.filterCargoSources path type)
           ;
         };
@@ -93,10 +88,10 @@
           inherit LD_LIBRARY_PATH;
         };
         wasmArgs = commonArgs // {
-          pname = "fractl-wasm";
+          pname = "fractl-gui-wasm";
           cargoExtraArgs = "--package=fractl-gui";
 
-          trunkIndexPath = "fractl-gui/web/index.html";
+          trunkIndexPath = "fractl-gui/index.html";
 
           CARGO_BUILD_TARGET = "wasm32-unknown-unknown";
         };

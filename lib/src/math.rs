@@ -111,10 +111,12 @@ fn mandelbrot(world_pos: Vector2<f64>, max_iterations: NonZeroU32) -> u32 {
 
     let max_iterations = max_iterations.get();
 
-    if {
+    let is_in_main_bulb = {
         let q = (world_pos.x - 0.25).powi(2) + world_pos.y.powi(2);
         q * (q + (world_pos.x - 0.25)) <= 0.25 * world_pos.y.powi(2)
-    } {
+    };
+
+    if is_in_main_bulb {
         max_iterations
     } else {
         let mut n = 0;

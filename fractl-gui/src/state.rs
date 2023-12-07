@@ -59,7 +59,7 @@ impl State {
 
         if self.show_ui {
             let (start_y, line_offset) = (40, 40);
-            Label::new("Fractaller", 30.0, None).draw(Vector2::new(10, start_y + line_offset * 0), &mut framebuffer);
+            Label::new("Fractaller", 30.0, None).draw(Vector2::new(10, start_y), &mut framebuffer);
 
             Label::new(format!("Selected fractal: {:}", self.selected_fractal), 25.0, None)
                 .draw(Vector2::new(10, start_y + line_offset * 2), &mut framebuffer);
