@@ -10,6 +10,6 @@ repository = "https://github.com/Shapur1234/Fractaller"
 cgmath = "0.18"
 fontdue = "0.7"
 lazy_static = "1.4"
-image = { version ="0.24.7", optional = true}
+image = { version ="0.24", optional = true}
 rayon = { version = "1.8", optional = true }
 winit = { version =  "0.29", optional = true }

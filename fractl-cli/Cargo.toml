@@ -8,5 +8,5 @@ repository = "https://github.com/Shapur1234/Fractaller"
 
 [dependencies]
 lib = { path = "../lib", features = [ "image", "rayon" ] }
-cgmath = "0.18.0"
+cgmath = "0.18"
 image = "0.24"
