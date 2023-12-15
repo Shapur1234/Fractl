@@ -1,7 +1,10 @@
 mod state;
+#[cfg(target_arch = "wasm32")]
+mod wasm;
 
 use std::{num::NonZeroU32, rc::Rc};
 
+use cfg_if::cfg_if;
 use cgmath::Vector2;
 use winit::{
     event::{ElementState, Event, KeyEvent, MouseScrollDelta, WindowEvent},
@@ -27,14 +30,11 @@ fn main() {
 
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-        web_sys::window()
-            .unwrap()
-            .document()
-            .unwrap()
-            .body()
-            .unwrap()
-            .append_child(&window.canvas().unwrap())
-            .unwrap();
+        wasm::body().append_child(&window.canvas().unwrap()).unwrap();
+
+        wasm::set_canvas_id();
+        wasm::resize_canvas();
+        wasm::register_window_resize();
     }
 
     let context = softbuffer::Context::new(window.clone()).unwrap();
@@ -42,11 +42,17 @@ fn main() {
 
     let mut mouse_pos = Vector2::new(0.0, 0.0);
     let mut screen_size = {
-        let size = window.inner_size();
-        Vector2::new(
-            NonZeroU32::new(size.width).unwrap_or(NonZeroU32::new(640).unwrap()),
-            NonZeroU32::new(size.height).unwrap_or(NonZeroU32::new(360).unwrap()),
-        )
+        cfg_if! {
+            if #[cfg(target_arch = "wasm32")] {
+                 wasm::window_size()
+            } else {
+                let size = window.inner_size();
+                Vector2::new(
+                    NonZeroU32::new(size.width).unwrap_or(NonZeroU32::new(640).unwrap()),
+                    NonZeroU32::new(size.height).unwrap_or(NonZeroU32::new(360).unwrap()),
+                )
+            }
+        }
     };
     let mut state = State::new(screen_size);
 

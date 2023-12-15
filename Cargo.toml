@@ -9,7 +9,6 @@ members = [
 [profile.release]
 lto = true
 
-
 [profile.flamegraph]
 inherits = "release"
 lto = false

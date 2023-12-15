@@ -7,6 +7,7 @@ license = "GPL-3.0-or-later"
 repository = "https://github.com/Shapur1234/Fractaller"
 
 [dependencies]
+cfg-if = "1.0"
 cgmath = "0.18"
 console_error_panic_hook = "0.1"
 softbuffer = "0.4"
@@ -17,5 +18,5 @@ lib = { path = "../lib", features = [ "rayon", "winit" ] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 lib = { path = "../lib", features = [ "winit" ] }
-web-sys = "0.3"
-
+wasm-bindgen = "0.2"
+web-sys = { version ="0.3", features = [ "HtmlCollection" ] }
