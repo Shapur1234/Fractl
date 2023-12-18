@@ -1,4 +1,4 @@
-use std::num::NonZeroU32;
+use std::{num::NonZeroU32, time::Instant};
 
 use cgmath::Vector2;
 use lib::{Camera, Draw, Fractal, FractalType, FrameBuffer, Label};
@@ -39,8 +39,14 @@ impl State {
     pub fn render(&self, screen_size: impl Into<Vector2<NonZeroU32>>) -> Vec<u32> {
         let mut framebuffer = FrameBuffer::new(screen_size.into());
 
-        Fractal::new(self.selected_fractal, self.camera.clone(), self.max_iterations)
-            .draw(Vector2::new(0, 0), &mut framebuffer);
+        let frametime = {
+            let now = Instant::now();
+
+            Fractal::new(self.selected_fractal, self.camera.clone(), self.max_iterations)
+                .draw(Vector2::new(0, 0), &mut framebuffer);
+
+            now.elapsed()
+        };
 
         if self.show_crosshair {
             const CROSSHAIR_SIZE: i64 = 5;
@@ -68,6 +74,13 @@ impl State {
                 .draw(Vector2::new(10, start_y + line_offset * 3), &mut framebuffer);
 
             Label::new(
+                format!("Frametime: {:} ms", frametime.as_secs_f64() * 1000.0),
+                25.0,
+                None,
+            )
+            .draw(Vector2::new(10, start_y + line_offset * 4), &mut framebuffer);
+
+            Label::new(
                 format!(
                     "Center pos: ({:}, {:})",
                     self.camera.center_pos().x,
@@ -76,7 +89,7 @@ impl State {
                 25.0,
                 None,
             )
-            .draw(Vector2::new(10, start_y + line_offset * 4), &mut framebuffer);
+            .draw(Vector2::new(10, start_y + line_offset * 5), &mut framebuffer);
 
             Label::new(
                 format!(
@@ -87,7 +100,7 @@ impl State {
                 25.0,
                 None,
             )
-            .draw(Vector2::new(10, start_y + line_offset * 5), &mut framebuffer);
+            .draw(Vector2::new(10, start_y + line_offset * 6), &mut framebuffer);
         }
 
         framebuffer.raw()

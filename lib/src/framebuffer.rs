@@ -3,6 +3,8 @@ use std::{
     ops::{Add, Deref, DerefMut, Index, IndexMut},
 };
 
+// TODO: macro
+
 use cgmath::Vector2;
 #[cfg(feature = "image")]
 use image::{Rgb, RgbImage};

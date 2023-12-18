@@ -12,6 +12,7 @@ pub enum FractalType {
     MandelbrotHistogram,
     MandelbrotLCH,
     MandelbrotOLC,
+    Multibrot,
     Circle,
 }
 
@@ -20,7 +21,8 @@ impl FractalType {
         match self {
             Self::MandelbrotHistogram => Self::MandelbrotLCH,
             Self::MandelbrotLCH => Self::MandelbrotOLC,
-            Self::MandelbrotOLC => Self::Circle,
+            Self::MandelbrotOLC => Self::Multibrot,
+            Self::Multibrot => Self::Circle,
             Self::Circle => Self::MandelbrotHistogram,
         }
     }
@@ -30,7 +32,8 @@ impl FractalType {
             Self::MandelbrotHistogram => Self::Circle,
             Self::MandelbrotLCH => Self::MandelbrotHistogram,
             Self::MandelbrotOLC => Self::MandelbrotLCH,
-            Self::Circle => Self::MandelbrotOLC,
+            Self::Multibrot => Self::MandelbrotOLC,
+            Self::Circle => Self::Multibrot,
         }
     }
 }
@@ -41,6 +44,7 @@ impl Display for FractalType {
             FractalType::MandelbrotHistogram => write!(f, "Mandelbrot - Histogram"),
             FractalType::MandelbrotLCH => write!(f, "Mandelbrot - LCH"),
             FractalType::MandelbrotOLC => write!(f, "Mandelbrot - OLC"),
+            FractalType::Multibrot => write!(f, "Multibrot"),
             FractalType::Circle => write!(f, "Circle"),
         }?;
 
@@ -99,13 +103,18 @@ fn get_pixel(world_pos: Vector2<f64>, max_iterations: NonZeroU32, fractal_type: 
         FractalType::MandelbrotHistogram => {
             color_histogram(mandelbrot(world_pos, max_iterations), max_iterations.get())
         }
+
         FractalType::MandelbrotLCH => color_lhc(mandelbrot(world_pos, max_iterations), max_iterations.get()),
         FractalType::MandelbrotOLC => color_olc(mandelbrot(world_pos, max_iterations), max_iterations.get()),
+        FractalType::Multibrot => color_histogram(multibrot(world_pos, max_iterations), max_iterations.get()),
         FractalType::Circle => circle(world_pos, max_iterations),
     }
 }
 
-#[allow(dead_code)]
+fn multibrot(world_pos: Vector2<f64>, max_iterations: NonZeroU32) -> u32 {
+    todo!()
+}
+
 fn mandelbrot(world_pos: Vector2<f64>, max_iterations: NonZeroU32) -> u32 {
     // https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Optimized_escape_time_algorithms
 
