@@ -1,7 +1,7 @@
 use std::{num::NonZeroU32, time::Instant};
 
 use cgmath::Vector2;
-use lib::{Camera, Draw, Fractal, FractalType, FrameBuffer, Label};
+use lib::{Camera, ColorType, Draw, Fractal, FractalType, FrameBuffer, Label};
 use winit::{
     event::{ElementState, KeyEvent},
     keyboard::{KeyCode, PhysicalKey},
@@ -15,7 +15,8 @@ const DEFAULT_SHOW_UI: bool = true;
 #[derive(Clone, Debug)]
 pub struct State {
     camera: Camera,
-    selected_fractal: FractalType,
+    selected_fractal_type: FractalType,
+    selected_color_type: ColorType,
     max_iterations: NonZeroU32,
     show_crosshair: bool,
     show_ui: bool,
@@ -25,7 +26,8 @@ impl State {
     pub fn new(screen_size: impl Into<Vector2<NonZeroU32>>) -> Self {
         Self {
             camera: Camera::new(screen_size),
-            selected_fractal: FractalType::default(),
+            selected_fractal_type: FractalType::default(),
+            selected_color_type: ColorType::default(),
             max_iterations: DEFAULT_MAX_ITERATIONS,
             show_crosshair: DEFAULT_SHOW_CROSSHAIR,
             show_ui: DEFAULT_SHOW_UI,
@@ -42,8 +44,13 @@ impl State {
         let frametime = {
             let now = Instant::now();
 
-            Fractal::new(self.selected_fractal, self.camera.clone(), self.max_iterations)
-                .draw(Vector2::new(0, 0), &mut framebuffer);
+            Fractal::new(
+                self.selected_fractal_type,
+                self.selected_color_type,
+                self.camera.clone(),
+                self.max_iterations,
+            )
+            .draw(Vector2::new(0, 0), &mut framebuffer);
 
             now.elapsed()
         };
@@ -67,18 +74,20 @@ impl State {
             let (start_y, line_offset) = (40, 40);
             Label::new("Fractaller", 30.0, None).draw(Vector2::new(10, start_y), &mut framebuffer);
 
-            Label::new(format!("Selected fractal: {:}", self.selected_fractal), 25.0, None)
+            Label::new(format!("Selected fractal: {:}", self.selected_fractal_type), 25.0, None)
                 .draw(Vector2::new(10, start_y + line_offset * 2), &mut framebuffer);
+            Label::new(format!("Selected coloring: {:}", self.selected_color_type), 25.0, None)
+                .draw(Vector2::new(10, start_y + line_offset * 3), &mut framebuffer);
 
             Label::new(format!("Max iterations: {:}", self.max_iterations), 25.0, None)
-                .draw(Vector2::new(10, start_y + line_offset * 3), &mut framebuffer);
+                .draw(Vector2::new(10, start_y + line_offset * 4), &mut framebuffer);
 
             Label::new(
                 format!("Frametime: {:} ms", frametime.as_secs_f64() * 1000.0),
                 25.0,
                 None,
             )
-            .draw(Vector2::new(10, start_y + line_offset * 4), &mut framebuffer);
+            .draw(Vector2::new(10, start_y + line_offset * 5), &mut framebuffer);
 
             Label::new(
                 format!(
@@ -89,7 +98,7 @@ impl State {
                 25.0,
                 None,
             )
-            .draw(Vector2::new(10, start_y + line_offset * 5), &mut framebuffer);
+            .draw(Vector2::new(10, start_y + line_offset * 6), &mut framebuffer);
 
             Label::new(
                 format!(
@@ -100,7 +109,7 @@ impl State {
                 25.0,
                 None,
             )
-            .draw(Vector2::new(10, start_y + line_offset * 6), &mut framebuffer);
+            .draw(Vector2::new(10, start_y + line_offset * 7), &mut framebuffer);
         }
 
         framebuffer.raw()
@@ -132,12 +141,22 @@ impl State {
                         true
                     }
                     KeyCode::KeyN => {
-                        self.selected_fractal = self.selected_fractal.prev();
+                        self.selected_fractal_type = self.selected_fractal_type.prev();
 
                         true
                     }
                     KeyCode::KeyM => {
-                        self.selected_fractal = self.selected_fractal.next();
+                        self.selected_fractal_type = self.selected_fractal_type.next();
+
+                        true
+                    }
+                    KeyCode::KeyV => {
+                        self.selected_color_type = self.selected_color_type.prev();
+
+                        true
+                    }
+                    KeyCode::KeyB => {
+                        self.selected_color_type = self.selected_color_type.next();
 
                         true
                     }
