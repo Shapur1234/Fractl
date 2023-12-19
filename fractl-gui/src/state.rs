@@ -1,4 +1,4 @@
-use std::{num::NonZeroU32, time::Instant};
+use std::num::NonZeroU32;
 
 use cgmath::Vector2;
 use lib::{Camera, ColorType, Draw, Fractal, FractalType, FrameBuffer, Label};
@@ -42,7 +42,7 @@ impl State {
         let mut framebuffer = FrameBuffer::new(screen_size.into());
 
         let frametime = {
-            let now = Instant::now();
+            let now = instant::Instant::now();
 
             Fractal::new(
                 self.selected_fractal_type,

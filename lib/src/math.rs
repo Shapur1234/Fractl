@@ -170,34 +170,36 @@ impl Fractal {
 impl Draw for Fractal {
     fn draw(&self, pos: Vector2<u32>, buffer: &mut crate::FrameBuffer) {
         buffer.data = {
-            let screen_poses = (0..buffer.size().x * buffer.size().y)
-                .into_iter()
-                .map(|index| buffer.index_to_pos(index))
-                .collect::<Vec<_>>();
-
-            let pixel_escape_times;
+            let data;
             cfg_if! {
                 if #[cfg(feature = "rayon")] {
-                    pixel_escape_times = screen_poses.into_par_iter().map(|screen_pos|
-                        self.fractal_type.escape_time(
-                            self.camera.screen_to_world_pos(&(screen_pos + pos), buffer.size()),
-                            self.max_iterations,
+                    data = (0..buffer.size().x * buffer.size().y)
+                        .into_par_iter()
+                        .map(|index| buffer.index_to_pos(index))
+                        .map(|screen_pos|
+                            self.fractal_type.escape_time(
+                                self.camera.screen_to_world_pos(&(screen_pos + pos), buffer.size()),
+                                self.max_iterations,
+                            )
                         )
-                    ).collect::<Vec<_>>();
+                        .map(|escape_time| self.color_type.escape_time_color(escape_time, self.max_iterations))
+                        .collect::<Vec<_>>();
                 } else {
-                    pixel_escape_times = pixel_poses.into_iter().map(|pixel_pos|
-                        self.fractal_type.escape_time(
-                            self.camera.screen_to_world_pos(&(screen_pos + pos), buffer.size()),
-                            self.max_iterations,
+                    data = (0..buffer.size().x * buffer.size().y)
+                        .into_iter()
+                        .map(|index| buffer.index_to_pos(index))
+                        .map(|screen_pos|
+                            self.fractal_type.escape_time(
+                                self.camera.screen_to_world_pos(&(screen_pos + pos), buffer.size()),
+                                self.max_iterations,
+                            )
                         )
-                    ).collect::<Vec<_>>();
+                        .map(|escape_time| self.color_type.escape_time_color(escape_time, self.max_iterations))
+                        .collect::<Vec<_>>();
                 }
             };
 
-            pixel_escape_times
-                .into_iter()
-                .map(|escape_time| self.color_type.escape_time_color(escape_time, self.max_iterations))
-                .collect::<Vec<_>>()
+            data
         }
     }
 }
