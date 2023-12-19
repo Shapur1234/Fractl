@@ -9,15 +9,15 @@ repository = "https://github.com/Shapur1234/Fractaller"
 [dependencies]
 cfg-if = "1.0"
 cgmath = "0.18"
-console_error_panic_hook = "0.1"
 softbuffer = "0.4"
 winit = "0.29"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 instant = "0.1"
-lib = { path = "../lib", features = [ "rayon", "winit" ] }
+lib = { path = "../lib", features = [ "multithread", "winit" ] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+console_error_panic_hook = "0.1"
 instant = { version = "0.1", features = [ "wasm-bindgen" ] }
 lib = { path = "../lib", features = [ "winit" ] }
 wasm-bindgen = "0.2"

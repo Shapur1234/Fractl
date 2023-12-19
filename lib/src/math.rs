@@ -2,8 +2,6 @@ use std::{f64::consts::PI, fmt::Display, num::NonZeroU32};
 
 use cfg_if::cfg_if;
 use cgmath::Vector2;
-#[cfg(feature = "rayon")]
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 use crate::{framebuffer::Color, Camera, Draw};
 
@@ -172,7 +170,9 @@ impl Draw for Fractal {
         buffer.data = {
             let data;
             cfg_if! {
-                if #[cfg(feature = "rayon")] {
+                if #[cfg(feature = "multithread")] {
+                    use rayon::iter::{IntoParallelIterator, ParallelIterator};
+
                     data = (0..buffer.size().x * buffer.size().y)
                         .into_par_iter()
                         .map(|index| buffer.index_to_pos(index))

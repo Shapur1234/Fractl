@@ -6,11 +6,21 @@ license = "GPL-3.0-or-later"
 authors = ["Shapur <48966182+Shapur1234@users.noreply.github.com>"]
 repository = "https://github.com/Shapur1234/Fractaller"
 
+[features]
+multithread = [ "dep:rayon" ]
+gpu = [ "dep:bytemuck", "dep:flume", "dep:pollster", "dep:wgpu" ]
+image = [ "dep:image" ]
+winit = [ "dep:winit" ]
+
 [dependencies]
 cfg-if = "1.0"
 cgmath = "0.18"
 fontdue = "0.7"
 lazy_static = "1.4"
-image = { version ="0.24", optional = true}
-rayon = { version = "1.8", optional = true }
+image = { version ="0.24", optional = true }
 winit = { version =  "0.29", optional = true }
+rayon =  { version = "1.8", optional = true }
+bytemuck = { version = "1.14", optional = true }
+flume = {version = "0.11", optional = true }
+pollster = { version =  "0.3", optional = true }
+wgpu = { version = "0.18", optional = true }
