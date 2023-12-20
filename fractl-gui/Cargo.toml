@@ -6,15 +6,19 @@ authors = ["Shapur <48966182+Shapur1234@users.noreply.github.com>"]
 license = "GPL-3.0-or-later"
 repository = "https://github.com/Shapur1234/Fractaller"
 
+[features]
+gpu = [ "lib/gpu"]
+multithread = [ "lib/multithread" ]
+
 [dependencies]
 cfg-if = "1.0"
 cgmath = "0.18"
 softbuffer = "0.4"
 winit = "0.29"
+lib = { path = "../lib", features = [ "winit" ] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 instant = "0.1"
-lib = { path = "../lib", features = [ "multithread", "winit" ] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1"

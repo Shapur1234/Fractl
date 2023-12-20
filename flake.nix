@@ -45,6 +45,7 @@
         src = lib.cleanSourceWith {
           src = ./.;
           filter = path: type:
+            (lib.hasSuffix "\.wgsl" path) ||
             (lib.hasSuffix "\.ttf" path) ||
             (lib.hasSuffix "\.html" path) ||
             (lib.hasSuffix "\.css" path) ||
@@ -52,13 +53,23 @@
           ;
         };
 
-        LD_LIBRARY_PATH = lib.makeLibraryPath (with pkgs; [
+        runtimeLibs = with pkgs; [
+          vulkan-headers
+          vulkan-loader
+          vulkan-tools
+          vulkan-validation-layers
+
+          wayland
+          wayland-protocols
+
           libxkbcommon
+
           xorg.libX11
           xorg.libXcursor
           xorg.libXi
           xorg.libXrandr
-        ]);
+        ];
+        LD_LIBRARY_PATH = lib.makeLibraryPath runtimeLibs;
 
         commonArgs = {
           inherit src;
@@ -75,12 +86,15 @@
 
         cliArgs = commonArgs // {
           pname = "fractl-cli";
-          cargoExtraArgs = "--package=fractl-cli ";
+          cargoExtraArgs = "--package=fractl-cli --features multithread";
         };
         guiArgs = commonArgs // {
           pname = "fractl-gui";
-          cargoExtraArgs = "--package=fractl-gui";
+          cargoExtraArgs = "--package=fractl-gui --features multithread";
 
+          buildInputs = [
+            runtimeLibs
+          ];
           nativeBuildInputs = with pkgs; [
             makeWrapper
           ];
@@ -170,6 +184,8 @@
           checks = self.checks.${system};
 
           packages = with pkgs;[
+            runtimeLibs
+
             trunk
             cargo-flamegraph
             cargo-outdated

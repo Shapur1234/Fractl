@@ -1,6 +1,8 @@
 use std::num::NonZeroU32;
 
 use cgmath::Vector2;
+#[cfg(feature = "gpu")]
+use lib::{gpu_compute, WgpuContext};
 use lib::{Camera, ColorType, Draw, Fractal, FractalType, FrameBuffer, Label};
 use winit::{
     event::{ElementState, KeyEvent},
@@ -12,8 +14,9 @@ const DEFAULT_MAX_ITERATIONS: NonZeroU32 =
 const DEFAULT_SHOW_CROSSHAIR: bool = true;
 const DEFAULT_SHOW_UI: bool = true;
 
-#[derive(Clone, Debug)]
 pub struct State {
+    #[cfg(feature = "gpu")]
+    wgpu_context: WgpuContext,
     camera: Camera,
     selected_fractal_type: FractalType,
     selected_color_type: ColorType,
@@ -24,7 +27,11 @@ pub struct State {
 
 impl State {
     pub fn new(screen_size: impl Into<Vector2<NonZeroU32>>) -> Self {
+        let screen_size = screen_size.into();
         Self {
+            #[cfg(feature = "gpu")]
+            wgpu_context: WgpuContext::new(std::mem::size_of::<[u32; 7]>()),
+            // wgpu_context: WgpuContext::new((screen_size.x.get() * screen_size.y.get()) as usize),
             camera: Camera::new(screen_size),
             selected_fractal_type: FractalType::default(),
             selected_color_type: ColorType::default(),
@@ -36,10 +43,23 @@ impl State {
 
     pub fn resize(&mut self, new_screen_size: impl Into<Vector2<NonZeroU32>>) {
         self.camera.resize(new_screen_size);
+
+        // TODO: Resize WgpuContenxt
     }
 
     pub fn render(&self, screen_size: impl Into<Vector2<NonZeroU32>>) -> Vec<u32> {
         let mut framebuffer = FrameBuffer::new(screen_size.into());
+
+        println!("hhhhh");
+        #[cfg(feature = "gpu")]
+        {
+            println!("hhhhhjhk");
+            let mut nums: [u32; 7] = [56, 4, 156, 12, 16, 8, 78];
+
+            gpu_compute(&mut nums, &self.wgpu_context);
+
+            dbg!(nums);
+        }
 
         let frametime = {
             let now = instant::Instant::now();

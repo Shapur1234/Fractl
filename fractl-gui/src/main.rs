@@ -15,6 +15,9 @@ use winit::{
 
 use crate::state::State;
 
+#[cfg(all(feature = "multithread", feature = "gpu"))]
+compile_error!("feature \"multithread\" and feature \"gpu\" cannot be enabled at the same time");
+
 fn main() {
     let event_loop = EventLoop::new().unwrap();
     let window = Rc::new(

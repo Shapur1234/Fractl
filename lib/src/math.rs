@@ -184,6 +184,8 @@ impl Draw for Fractal {
                         )
                         .map(|escape_time| self.color_type.escape_time_color(escape_time, self.max_iterations))
                         .collect::<Vec<_>>();
+                } else if #[cfg(feature = "gpu")] {
+                    todo!()
                 } else {
                     data = (0..buffer.size().x * buffer.size().y)
                         .into_iter()
