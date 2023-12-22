@@ -35,7 +35,10 @@
         inherit (pkgs) lib;
 
         rustToolchain = pkgs.rust-bin.stable.latest.default.override {
-          targets = [ "wasm32-unknown-unknown" ];
+          targets = [
+            "wasm32-unknown-unknown"
+            "x86_64-pc-windows-gnu"
+          ];
           extensions = [ "rust-src" ];
         };
         craneLib = ((crane.mkLib pkgs).overrideToolchain rustToolchain).overrideScope' (_final: _prev: {
@@ -183,7 +186,8 @@
         devShells.default = craneLib.devShell {
           checks = self.checks.${system};
 
-          packages = with pkgs;[
+          packages = with pkgs; [
+            rustToolchain
             runtimeLibs
 
             trunk

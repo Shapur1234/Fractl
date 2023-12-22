@@ -1,10 +1,48 @@
-// https://github.com/gfx-rs/wgpu/tree/trunk/examples/src/repeated_compute
+use crate::Camera;
 
-// A convenient way to hold together all the useful wgpu stuff together.
+use std::num::NonZeroU32;
+
+use cgmath::Vector2;
+use wgpu::util::DeviceExt;
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, Default, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct ArgsUniform {
+    screen_size: [u32; 2],
+    view_size: [f32; 2],
+    zoom: [f32; 2],
+    center_pos: [f32; 2],
+    max_iterations: u32,
+    selected_fractal: u32,
+    selected_color: u32,
+    _padding: u32,
+}
+
+impl ArgsUniform {
+    pub fn new(
+        camera: &Camera,
+        screen_size: impl Into<Vector2<NonZeroU32>>,
+        max_iterations: u32,
+        selected_fractal: u32,
+        selected_color: u32,
+    ) -> Self {
+        Self {
+            screen_size: screen_size.into().map(|x| x.get()).into(),
+            view_size: camera.view_size.map(|x| x as f32).into(),
+            zoom: camera.zoom.map(|x| x as f32).into(),
+            center_pos: camera.center_pos.map(|x| x as f32).into(),
+            max_iterations,
+            selected_fractal,
+            selected_color,
+            _padding: 0,
+        }
+    }
+}
 
 pub struct WgpuContext {
     device: wgpu::Device,
     queue: wgpu::Queue,
+    args_buffer: wgpu::Buffer,
     pipeline: wgpu::ComputePipeline,
     bind_group: wgpu::BindGroup,
     storage_buffer: wgpu::Buffer,
@@ -14,6 +52,11 @@ pub struct WgpuContext {
 impl WgpuContext {
     pub fn new(buffer_size: usize) -> Self {
         pollster::block_on(Self::new_async(buffer_size))
+    }
+
+    pub fn update_args(&mut self, args_uniform: ArgsUniform) {
+        self.queue
+            .write_buffer(&self.args_buffer, 0, bytemuck::cast_slice(&[args_uniform]));
     }
 
     async fn new_async(buffer_size: usize) -> Self {
@@ -34,26 +77,24 @@ impl WgpuContext {
             .await
             .unwrap();
 
-        // Our shader, kindly compiled with Naga.
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: None,
             source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!("./shader.wgsl"))),
         });
 
-        // This is where the GPU will read from and write to.
+        let args_uniform = ArgsUniform::default();
+        let args_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Args Buffer"),
+            contents: bytemuck::cast_slice(&[args_uniform]),
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        });
+
         let storage_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
             size: buffer_size as wgpu::BufferAddress,
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::COPY_SRC,
             mapped_at_creation: false,
         });
-        // For portability reasons, WebGPU draws a distinction between memory that is
-        // accessible by the CPU and memory that is accessible by the GPU. Only
-        // buffers accessible by the CPU can be mapped and accessed by the CPU and
-        // only buffers visible to the GPU can be used in shaders. In order to get
-        // data from the GPU, we need to use CommandEncoder::copy_buffer_to_buffer
-        // (which we will later) to copy the buffer modified by the GPU into a
-        // mappable, CPU-accessible buffer which we'll create here.
         let output_staging_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: None,
             size: buffer_size as wgpu::BufferAddress,
@@ -61,30 +102,44 @@ impl WgpuContext {
             mapped_at_creation: false,
         });
 
-        // This can be though of as the function signature for our CPU-GPU function.
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: None,
-            entries: &[wgpu::BindGroupLayoutEntry {
-                binding: 0,
-                visibility: wgpu::ShaderStages::COMPUTE,
-                ty: wgpu::BindingType::Buffer {
-                    ty: wgpu::BufferBindingType::Storage { read_only: false },
-                    has_dynamic_offset: false,
-                    // Going to have this be None just to be safe.
-                    min_binding_size: None,
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Storage { read_only: false },
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
                 },
-                count: None,
-            }],
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: wgpu::ShaderStages::COMPUTE,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+            ],
         });
-        // This ties actual resources stored in the GPU to our metaphorical function
-        // through the binding slots we defined above.
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: None,
             layout: &bind_group_layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: storage_buffer.as_entire_binding(),
-            }],
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: storage_buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: args_buffer.as_entire_binding(),
+                },
+            ],
         });
 
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -102,6 +157,7 @@ impl WgpuContext {
         Self {
             device,
             queue,
+            args_buffer,
             pipeline,
             bind_group,
             storage_buffer,
@@ -110,14 +166,11 @@ impl WgpuContext {
     }
 }
 
-pub fn gpu_compute(local_buffer: &mut [u32], context: &WgpuContext) {
-    pollster::block_on(gpu_compute_async(local_buffer, context))
+pub fn gpu_compute(local_buffer: &mut [u32], args: ArgsUniform, context: &WgpuContext) {
+    pollster::block_on(gpu_compute_async(local_buffer, args, context))
 }
 
-async fn gpu_compute_async(local_buffer: &mut [u32], context: &WgpuContext) {
-    // Local buffer contents -> GPU storage buffer
-    // Adds a write buffer command to the queue. This command is more complicated
-    // than it appears.
+async fn gpu_compute_async(local_buffer: &mut [u32], args: ArgsUniform, context: &WgpuContext) {
     context
         .queue
         .write_buffer(&context.storage_buffer, 0, bytemuck::cast_slice(local_buffer));
@@ -135,9 +188,7 @@ async fn gpu_compute_async(local_buffer: &mut [u32], context: &WgpuContext) {
         compute_pass.set_bind_group(0, &context.bind_group, &[]);
         compute_pass.dispatch_workgroups(local_buffer.len() as u32, 1, 1);
     }
-    // We finish the compute pass by dropping it.
 
-    // Entire storage buffer -> staging buffer.
     command_encoder.copy_buffer_to_buffer(
         &context.storage_buffer,
         0,
@@ -146,51 +197,19 @@ async fn gpu_compute_async(local_buffer: &mut [u32], context: &WgpuContext) {
         context.storage_buffer.size(),
     );
 
-    // Finalize the command encoder, add the contained commands to the queue and flush.
     context.queue.submit(Some(command_encoder.finish()));
 
-    // Finally time to get our results.
-    // First we get a buffer slice which represents a chunk of the buffer (which we
-    // can't access yet).
-    // We want the whole thing so use unbounded range.
     let buffer_slice = context.output_staging_buffer.slice(..);
-    // Now things get complicated. WebGPU, for safety reasons, only allows either the GPU
-    // or CPU to access a buffer's contents at a time. We need to "map" the buffer which means
-    // flipping ownership of the buffer over to the CPU and making access legal. We do this
-    // with `BufferSlice::map_async`.
-    //
-    // The problem is that map_async is not an async function so we can't await it. What
-    // we need to do instead is pass in a closure that will be executed when the slice is
-    // either mapped or the mapping has failed.
-    //
-    // The problem with this is that we don't have a reliable way to wait in the main
-    // code for the buffer to be mapped and even worse, calling get_mapped_range or
-    // get_mapped_range_mut prematurely will cause a panic, not return an error.
-    //
-    // Using channels solves this as awaiting the receiving of a message from
-    // the passed closure will force the outside code to wait. It also doesn't hurt
-    // if the closure finishes before the outside code catches up as the message is
-    // buffered and receiving will just pick that up.
-    //
-    // It may also be worth noting that although on native, the usage of asynchronous
-    // channels is wholely unnecessary, for the sake of portability to WASM (std channels
-    // don't work on WASM,) we'll use async channels that work on both native and WASM.
+
     let (sender, receiver) = flume::bounded(1);
     buffer_slice.map_async(wgpu::MapMode::Read, move |r| sender.send(r).unwrap());
-    // In order for the mapping to be completed, one of three things must happen.
-    // One of those can be calling `Device::poll`. This isn't necessary on the web as devices
-    // are polled automatically but natively, we need to make sure this happens manually.
-    // `Maintain::Wait` will cause the thread to wait on native but not the web.
+
     context.device.poll(wgpu::Maintain::Wait);
-    // Now we await the receiving and panic if anything went wrong because we're lazy.
     receiver.recv_async().await.unwrap().unwrap();
-    // NOW we can call get_mapped_range.
     {
         let view = buffer_slice.get_mapped_range();
         local_buffer.copy_from_slice(bytemuck::cast_slice(&view));
     }
-    // We need to make sure all `BufferView`'s are dropped before we do what we're about
-    // to do.
-    // Unmap so that we can copy to the staging buffer in the next iteration.
+
     context.output_staging_buffer.unmap();
 }

@@ -1,38 +1,70 @@
-@group(0)
-@binding(0)
-var<storage, read_write> v_indices: array<u32>; // this is used as both input and output for convenience
+struct Args {
+    screen_size: vec2<u32>,
+    view_size: vec2<f32>,
+    zoom: vec2<f32>,
+    center_pos: vec2<f32>,
+    max_iterations: u32,
+    selected_fractal: u32,
+    selected_color: u32,
+    _padding: u32,
+}
 
-// The Collatz Conjecture states that for any integer n:
-// If n is even, n = n/2
-// If n is odd, n = 3n+1
-// And repeat this process for each new n, you will always eventually reach 1.
-// Though the conjecture has not been proven, no counterexample has ever been found.
-// This function returns how many times this recurrence needs to be applied to reach 1.
-fn collatz_iterations(n_base: u32) -> u32{
-    var n: u32 = n_base;
-    var i: u32 = 0u;
-    loop {
-        if (n <= 1u) {
+@group(0) @binding(0)
+var<storage, read_write> v_indices: array<u32>; 
+
+@group(0) @binding(1)
+var<uniform> args: Args;
+
+fn index_to_world_pos(index: u32) -> vec2<f32> {
+    let screen_x = index % args.screen_size.x;
+    let screen_y = (index - screen_x) / args.screen_size.x;
+    let screen_pos_normalized = vec2(
+        (f32(screen_x) / f32(args.screen_size.x)) - 0.5, 
+        (f32(screen_y) / f32(args.screen_size.y)) - 0.5
+    );
+
+    return vec2(
+        ((screen_pos_normalized.x * args.view_size.x) / args.zoom.x) + args.center_pos.x,
+        ((screen_pos_normalized.y * args.view_size.y) / args.zoom.y) + args.center_pos.y,
+    );
+}
+
+fn mandelbrot_escape_time(world_pos: vec2<f32>) -> u32 {
+    var n: u32 = 0u;
+
+    var x: f32 = 0.0;
+    var x2: f32 = 0.0;
+    var y: f32 = 0.0;
+    var y2: f32 = 0.0;
+
+    loop  {
+        if !(x2 + y2 <= 4.0 && n < args.max_iterations) {
             break;
         }
-        if (n % 2u == 0u) {
-            n = n / 2u;
-        }
-        else {
-            // Overflow? (i.e. 3*n + 1 > 0xffffffffu?)
-            if (n >= 1431655765u) {   // 0x55555555u
-                return 4294967295u;   // 0xffffffffu
-            }
 
-            n = 3u * n + 1u;
-        }
-        i = i + 1u;
+        y = 2.0 * x * y + world_pos.y;
+        x = x2 - y2 + world_pos.x;
+
+        x2 = pow(x, 2.0);
+        y2 = pow(y, 2.0);
+
+        n += 1u;
     }
-    return i;
+
+    return n;
+}
+
+fn color_histogram(escape_time: u32) -> u32 {
+    return color(0u, 0u, u32(f32(escape_time) / f32(args.max_iterations)));
+}
+
+fn color(red: u32, green: u32, blue: u32) -> u32 {
+    return blue | (green << 8u) | (red << 16u);
 }
 
 @compute
 @workgroup_size(1)
 fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
-    v_indices[global_id.x] = collatz_iterations(v_indices[global_id.x]);
+    // TODO: Different colors and fractals
+    v_indices[global_id.x] = color_histogram(mandelbrot_escape_time(index_to_world_pos(v_indices[global_id.x])));
 }

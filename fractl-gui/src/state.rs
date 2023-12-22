@@ -1,8 +1,8 @@
 use std::num::NonZeroU32;
 
 use cgmath::Vector2;
-#[cfg(feature = "gpu")]
-use lib::{gpu_compute, WgpuContext};
+// #[cfg(feature = "gpu")]
+// use lib::{gpu_compute, WgpuContext};
 use lib::{Camera, ColorType, Draw, Fractal, FractalType, FrameBuffer, Label};
 use winit::{
     event::{ElementState, KeyEvent},
@@ -50,16 +50,16 @@ impl State {
     pub fn render(&self, screen_size: impl Into<Vector2<NonZeroU32>>) -> Vec<u32> {
         let mut framebuffer = FrameBuffer::new(screen_size.into());
 
-        println!("hhhhh");
-        #[cfg(feature = "gpu")]
-        {
-            println!("hhhhhjhk");
-            let mut nums: [u32; 7] = [56, 4, 156, 12, 16, 8, 78];
+        // println!("hhhhh");
+        // #[cfg(feature = "gpu")]
+        // {
+        //     println!("hhhhhjhk");
+        //     let mut nums: [u32; 7] = [56, 4, 156, 12, 16, 8, 78];
 
-            gpu_compute(&mut nums, &self.wgpu_context);
+        //     gpu_compute(&mut nums, ArgsUniform::new(), &self.wgpu_context);
 
-            dbg!(nums);
-        }
+        //     dbg!(nums);
+        // }
 
         let frametime = {
             let now = instant::Instant::now();

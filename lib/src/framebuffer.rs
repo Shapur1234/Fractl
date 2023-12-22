@@ -9,6 +9,7 @@ use cgmath::Vector2;
 #[cfg(feature = "image")]
 use image::{Rgb, RgbImage};
 
+#[repr(transparent)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Color(u32);
 
@@ -29,15 +30,15 @@ impl Color {
     }
 
     pub const fn red(&self) -> u8 {
-        ((self.0 & 0b00000000111111110000000000000000) >> 16) as u8
+        ((self.0 & 0xFF0000) >> 16) as u8
     }
 
     pub const fn green(&self) -> u8 {
-        ((self.0 & 0b00000000000000001111111100000000) >> 8) as u8
+        ((self.0 & 0xFF00) >> 8) as u8
     }
 
     pub const fn blue(&self) -> u8 {
-        (self.0 & 0b00000000000000000000000011111111) as u8
+        (self.0 & 0xFF) as u8
     }
 
     pub fn scale(&self, times: f32) -> Self {

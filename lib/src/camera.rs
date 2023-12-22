@@ -9,9 +9,9 @@ use winit::{
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Camera {
-    center_pos: Vector2<f64>,
-    view_size: Vector2<f64>,
-    zoom: Vector2<f64>,
+    pub(crate) center_pos: Vector2<f64>,
+    pub(crate) view_size: Vector2<f64>,
+    pub(crate) zoom: Vector2<f64>,
 }
 
 impl Camera {
@@ -178,4 +178,7 @@ impl Camera {
             ((screen_pos_normalized.y * self.view_size.y) / self.zoom.y) + self.center_pos.y,
         )
     }
+
+    #[cfg(feature = "gpu")]
+    pub fn uniform(&self) {}
 }
