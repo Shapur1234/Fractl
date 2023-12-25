@@ -1,4 +1,5 @@
 struct Args {
+
     screen_size: vec2<u32>,
     view_size: vec2<f32>,
     zoom: vec2<f32>,
@@ -38,25 +39,32 @@ fn mandelbrot_escape_time(world_pos: vec2<f32>) -> u32 {
     var y: f32 = 0.0;
     var y2: f32 = 0.0;
 
-    loop  {
-        if !(x2 + y2 <= 4.0 && n < args.max_iterations) {
-            break;
+    let q = pow(world_pos.x - 0.25, 2.0) + pow(world_pos.y, 2.0);
+    let is_in_main_bulb = q * (q + world_pos.x - 0.25) <= 0.25 * pow(world_pos.y, 2.0);
+
+    if is_in_main_bulb {
+        return args.max_iterations;
+    } else {
+        loop  {
+            if !(x2 + y2 <= 4.0 && n < args.max_iterations) {
+                break;
+            }
+
+            y = 2.0 * x * y + world_pos.y;
+            x = x2 - y2 + world_pos.x;
+
+            x2 = pow(x, 2.0);
+            y2 = pow(y, 2.0);
+
+            n += 1u;
         }
-
-        y = 2.0 * x * y + world_pos.y;
-        x = x2 - y2 + world_pos.x;
-
-        x2 = pow(x, 2.0);
-        y2 = pow(y, 2.0);
-
-        n = n + 1u;
     }
 
     return n;
 }
 
 fn color_histogram(escape_time: u32) -> u32 {
-    return color(0u, 0u, u32(f32(escape_time) / f32(args.max_iterations)) * 255u);
+    return color(0u, 0u, u32((f32(escape_time) / f32(args.max_iterations)) * 255.0));
 }
 
 fn color(red: u32, green: u32, blue: u32) -> u32 {

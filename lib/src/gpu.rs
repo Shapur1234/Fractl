@@ -5,7 +5,44 @@ use std::{num::NonZeroU32, sync::Mutex};
 use cgmath::Vector2;
 use wgpu::util::DeviceExt;
 
-static INSTANCE: Mutex<Option<WgpuContext>> = Mutex::new(None);
+pub(crate) fn do_gpu_compute(
+    io_buffer: &mut [u32],
+    camera: &Camera,
+    screen_size: impl Into<Vector2<NonZeroU32>>,
+    max_iterations: NonZeroU32,
+    selected_fractal: FractalType,
+    selected_color: ColorType,
+) {
+    static INSTANCE: Mutex<Option<WgpuContext>> = Mutex::new(None);
+
+    let screen_size = screen_size.into();
+    let buffer_size = screen_size.x.get() * screen_size.y.get();
+
+    assert_eq!(io_buffer.len() as u32, buffer_size);
+
+    let mut instance_lock = INSTANCE.lock().unwrap();
+
+    if instance_lock.is_none() {
+        *instance_lock = Some(WgpuContext::new());
+    }
+
+    if let Some(context) = &mut *instance_lock {
+        context.update(camera, screen_size, max_iterations, selected_fractal, selected_color);
+
+        let chunks_iterator =
+            io_buffer.chunks_exact_mut(context.device.limits().max_compute_workgroups_per_dimension as usize);
+        for chunk in chunks_iterator {
+            context.gpu_compute(chunk);
+        }
+
+        // let remainder = chunks_iterator.into_remainder();
+        // if remainder.len() != 0 {
+        //     // TODO
+        // }
+    } else {
+        unreachable!()
+    }
+}
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Default, bytemuck::Pod, bytemuck::Zeroable)]
@@ -48,15 +85,10 @@ struct WgpuContext {
     pipeline: wgpu::ComputePipeline,
     bind_group: wgpu::BindGroup,
     storage_buffer: wgpu::Buffer,
-    old_buffer_size: u32,
     output_staging_buffer: wgpu::Buffer,
 }
 
 impl WgpuContext {
-    fn new(buffer_len: u32) -> Self {
-        pollster::block_on(Self::new_async(buffer_len))
-    }
-
     fn update(
         &mut self,
         camera: &Camera,
@@ -78,19 +110,20 @@ impl WgpuContext {
                 selected_color,
             )]),
         );
-
-        let new_buffer_size = screen_size.x.get() * screen_size.y.get();
-        if new_buffer_size != self.old_buffer_size {
-            self.old_buffer_size = new_buffer_size;
-
-            todo!();
-        }
     }
 
-    async fn new_async(buffer_len: u32) -> Self {
+    fn new() -> Self {
+        pollster::block_on(Self::new_async())
+    }
+
+    async fn new_async() -> Self {
         let instance = wgpu::Instance::default();
         let adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions::default())
+            .request_adapter(&&wgpu::RequestAdapterOptions {
+                power_preference: wgpu::PowerPreference::HighPerformance,
+                compatible_surface: None,
+                force_fallback_adapter: false,
+            })
             .await
             .unwrap();
         let (device, queue) = adapter
@@ -104,6 +137,8 @@ impl WgpuContext {
             )
             .await
             .unwrap();
+
+        let buffer_len = device.limits().max_compute_workgroups_per_dimension;
 
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: None,
@@ -189,7 +224,6 @@ impl WgpuContext {
             pipeline,
             bind_group,
             storage_buffer,
-            old_buffer_size: buffer_len as u32,
             output_staging_buffer,
         }
     }
@@ -239,32 +273,5 @@ impl WgpuContext {
         }
 
         self.output_staging_buffer.unmap();
-    }
-}
-
-pub(crate) fn do_gpu_compute(
-    io_buffer: &mut [u32],
-    camera: &Camera,
-    screen_size: impl Into<Vector2<NonZeroU32>>,
-    max_iterations: NonZeroU32,
-    selected_fractal: FractalType,
-    selected_color: ColorType,
-) {
-    let screen_size = screen_size.into();
-    let buffer_size = screen_size.x.get() * screen_size.y.get();
-
-    assert_eq!(io_buffer.len() as u32, buffer_size);
-
-    let mut instance_lock = INSTANCE.lock().unwrap();
-
-    if instance_lock.is_none() {
-        *instance_lock = Some(WgpuContext::new(buffer_size));
-    }
-
-    if let Some(context) = &mut *instance_lock {
-        context.update(camera, screen_size, max_iterations, selected_fractal, selected_color);
-        context.gpu_compute(io_buffer);
-    } else {
-        unreachable!()
     }
 }

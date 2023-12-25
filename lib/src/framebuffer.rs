@@ -170,6 +170,7 @@ impl IndexMut<Vector2<u32>> for FrameBuffer {
     }
 }
 
+// TODO: Add fill trait or something
 pub trait Draw {
     fn draw(&self, pos: Vector2<u32>, buffer: &mut FrameBuffer);
 }

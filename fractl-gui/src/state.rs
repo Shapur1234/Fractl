@@ -15,7 +15,6 @@ const DEFAULT_SHOW_CROSSHAIR: bool = true;
 const DEFAULT_SHOW_UI: bool = true;
 
 pub struct State {
-    #[cfg(feature = "gpu")]
     camera: Camera,
     selected_fractal_type: FractalType,
     selected_color_type: ColorType,
@@ -43,17 +42,6 @@ impl State {
 
     pub fn render(&self, screen_size: impl Into<Vector2<NonZeroU32>>) -> Vec<u32> {
         let mut framebuffer = FrameBuffer::new(screen_size.into());
-
-        // println!("hhhhh");
-        // #[cfg(feature = "gpu")]
-        // {
-        //     println!("hhhhhjhk");
-        //     let mut nums: [u32; 7] = [56, 4, 156, 12, 16, 8, 78];
-
-        //     gpu_compute(&mut nums, ArgsUniform::new(), &self.wgpu_context);
-
-        //     dbg!(nums);
-        // }
 
         let frametime = {
             let now = instant::Instant::now();

@@ -3,11 +3,7 @@ use std::{f64::consts::PI, fmt::Display, num::NonZeroU32};
 use cfg_if::cfg_if;
 use cgmath::Vector2;
 
-use crate::{
-    framebuffer::{transform_vec, Color},
-    gpu::do_gpu_compute,
-    Camera, Draw,
-};
+use crate::{framebuffer::Color, Camera, Draw};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum FractalType {
@@ -189,12 +185,22 @@ impl Draw for Fractal {
                         .map(|escape_time| self.color_type.escape_time_color(escape_time, self.max_iterations))
                         .collect::<Vec<_>>();
                 } else if #[cfg(feature = "gpu")] {
+                    use crate::{framebuffer::transform_vec, gpu::do_gpu_compute};
+
+
                     let mut io_buffer = (0..buffer.size().x * buffer.size().y)
                         .into_iter().collect::<Vec<_>>();
 
-                        do_gpu_compute(&mut io_buffer, &self.camera, buffer.size().map(|x| NonZeroU32::new(x).unwrap()), self.max_iterations, self.fractal_type, self.color_type);
+                    do_gpu_compute(
+                        &mut io_buffer,
+                        &self.camera,
+                        buffer.size().map(|x| NonZeroU32::new(x).unwrap()),
+                        self.max_iterations,
+                        self.fractal_type,
+                        self.color_type
+                    );
 
-                        data = unsafe { transform_vec::<u32, Color>(io_buffer) };
+                    data = unsafe { transform_vec::<u32, Color>(io_buffer) };
                 } else {
                     data = (0..buffer.size().x * buffer.size().y)
                         .into_iter()
