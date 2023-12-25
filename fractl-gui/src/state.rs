@@ -16,7 +16,6 @@ const DEFAULT_SHOW_UI: bool = true;
 
 pub struct State {
     #[cfg(feature = "gpu")]
-    wgpu_context: WgpuContext,
     camera: Camera,
     selected_fractal_type: FractalType,
     selected_color_type: ColorType,
@@ -29,9 +28,6 @@ impl State {
     pub fn new(screen_size: impl Into<Vector2<NonZeroU32>>) -> Self {
         let screen_size = screen_size.into();
         Self {
-            #[cfg(feature = "gpu")]
-            wgpu_context: WgpuContext::new(std::mem::size_of::<[u32; 7]>()),
-            // wgpu_context: WgpuContext::new((screen_size.x.get() * screen_size.y.get()) as usize),
             camera: Camera::new(screen_size),
             selected_fractal_type: FractalType::default(),
             selected_color_type: ColorType::default(),
@@ -43,8 +39,6 @@ impl State {
 
     pub fn resize(&mut self, new_screen_size: impl Into<Vector2<NonZeroU32>>) {
         self.camera.resize(new_screen_size);
-
-        // TODO: Resize WgpuContenxt
     }
 
     pub fn render(&self, screen_size: impl Into<Vector2<NonZeroU32>>) -> Vec<u32> {

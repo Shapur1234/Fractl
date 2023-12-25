@@ -7,6 +7,7 @@ use std::{num::NonZeroU32, rc::Rc};
 use cfg_if::cfg_if;
 use cgmath::Vector2;
 use winit::{
+    dpi::PhysicalSize,
     event::{ElementState, Event, KeyEvent, MouseScrollDelta, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     keyboard::{Key, NamedKey},
@@ -23,6 +24,8 @@ fn main() {
     let window = Rc::new(
         WindowBuilder::new()
             .with_title(env!("CARGO_BIN_NAME"))
+            .with_inner_size(PhysicalSize::new(300, 200))
+            .with_resizable(false)
             .build(&event_loop)
             .unwrap(),
     );

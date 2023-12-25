@@ -178,7 +178,4 @@ impl Camera {
             ((screen_pos_normalized.y * self.view_size.y) / self.zoom.y) + self.center_pos.y,
         )
     }
-
-    #[cfg(feature = "gpu")]
-    pub fn uniform(&self) {}
 }

@@ -1,13 +1,15 @@
-use crate::Camera;
+use crate::{Camera, ColorType, FractalType};
 
-use std::num::NonZeroU32;
+use std::{num::NonZeroU32, sync::Mutex};
 
 use cgmath::Vector2;
 use wgpu::util::DeviceExt;
 
+static INSTANCE: Mutex<Option<WgpuContext>> = Mutex::new(None);
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Default, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct ArgsUniform {
+struct ArgsUniform {
     screen_size: [u32; 2],
     view_size: [f32; 2],
     zoom: [f32; 2],
@@ -22,44 +24,70 @@ impl ArgsUniform {
     pub fn new(
         camera: &Camera,
         screen_size: impl Into<Vector2<NonZeroU32>>,
-        max_iterations: u32,
-        selected_fractal: u32,
-        selected_color: u32,
+        max_iterations: NonZeroU32,
+        selected_fractal: FractalType,
+        selected_color: ColorType,
     ) -> Self {
         Self {
             screen_size: screen_size.into().map(|x| x.get()).into(),
             view_size: camera.view_size.map(|x| x as f32).into(),
             zoom: camera.zoom.map(|x| x as f32).into(),
             center_pos: camera.center_pos.map(|x| x as f32).into(),
-            max_iterations,
-            selected_fractal,
-            selected_color,
+            max_iterations: max_iterations.get(),
+            selected_fractal: selected_fractal as u32,
+            selected_color: selected_color as u32,
             _padding: 0,
         }
     }
 }
 
-pub struct WgpuContext {
+struct WgpuContext {
     device: wgpu::Device,
     queue: wgpu::Queue,
     args_buffer: wgpu::Buffer,
     pipeline: wgpu::ComputePipeline,
     bind_group: wgpu::BindGroup,
     storage_buffer: wgpu::Buffer,
+    old_buffer_size: u32,
     output_staging_buffer: wgpu::Buffer,
 }
 
 impl WgpuContext {
-    pub fn new(buffer_size: usize) -> Self {
-        pollster::block_on(Self::new_async(buffer_size))
+    fn new(buffer_len: u32) -> Self {
+        pollster::block_on(Self::new_async(buffer_len))
     }
 
-    pub fn update_args(&mut self, args_uniform: ArgsUniform) {
-        self.queue
-            .write_buffer(&self.args_buffer, 0, bytemuck::cast_slice(&[args_uniform]));
+    fn update(
+        &mut self,
+        camera: &Camera,
+        screen_size: impl Into<Vector2<NonZeroU32>>,
+        max_iterations: NonZeroU32,
+        selected_fractal: FractalType,
+        selected_color: ColorType,
+    ) {
+        let screen_size = screen_size.into();
+
+        self.queue.write_buffer(
+            &self.args_buffer,
+            0,
+            bytemuck::cast_slice(&[ArgsUniform::new(
+                camera,
+                screen_size,
+                max_iterations,
+                selected_fractal,
+                selected_color,
+            )]),
+        );
+
+        let new_buffer_size = screen_size.x.get() * screen_size.y.get();
+        if new_buffer_size != self.old_buffer_size {
+            self.old_buffer_size = new_buffer_size;
+
+            todo!();
+        }
     }
 
-    async fn new_async(buffer_size: usize) -> Self {
+    async fn new_async(buffer_len: u32) -> Self {
         let instance = wgpu::Instance::default();
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions::default())
@@ -90,14 +118,14 @@ impl WgpuContext {
         });
 
         let storage_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: None,
-            size: buffer_size as wgpu::BufferAddress,
+            label: Some("Storage buffer"),
+            size: (buffer_len * (std::mem::size_of::<u32>() as u32)) as wgpu::BufferAddress,
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::COPY_SRC,
             mapped_at_creation: false,
         });
         let output_staging_buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: None,
-            size: buffer_size as wgpu::BufferAddress,
+            label: Some("Output stagin buffer"),
+            size: (buffer_len * (std::mem::size_of::<u32>() as u32)) as wgpu::BufferAddress,
             usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
             mapped_at_creation: false,
         });
@@ -161,55 +189,82 @@ impl WgpuContext {
             pipeline,
             bind_group,
             storage_buffer,
+            old_buffer_size: buffer_len as u32,
             output_staging_buffer,
         }
     }
-}
 
-pub fn gpu_compute(local_buffer: &mut [u32], args: ArgsUniform, context: &WgpuContext) {
-    pollster::block_on(gpu_compute_async(local_buffer, args, context))
-}
-
-async fn gpu_compute_async(local_buffer: &mut [u32], args: ArgsUniform, context: &WgpuContext) {
-    context
-        .queue
-        .write_buffer(&context.storage_buffer, 0, bytemuck::cast_slice(local_buffer));
-
-    let mut command_encoder = context
-        .device
-        .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
-
-    {
-        let mut compute_pass = command_encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
-            label: None,
-            timestamp_writes: None,
-        });
-        compute_pass.set_pipeline(&context.pipeline);
-        compute_pass.set_bind_group(0, &context.bind_group, &[]);
-        compute_pass.dispatch_workgroups(local_buffer.len() as u32, 1, 1);
+    fn gpu_compute(&self, local_buffer: &mut [u32]) {
+        pollster::block_on(self.gpu_compute_async(local_buffer))
     }
 
-    command_encoder.copy_buffer_to_buffer(
-        &context.storage_buffer,
-        0,
-        &context.output_staging_buffer,
-        0,
-        context.storage_buffer.size(),
-    );
+    async fn gpu_compute_async(&self, local_buffer: &mut [u32]) {
+        self.queue
+            .write_buffer(&self.storage_buffer, 0, bytemuck::cast_slice(local_buffer));
 
-    context.queue.submit(Some(command_encoder.finish()));
+        let mut command_encoder = self
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
 
-    let buffer_slice = context.output_staging_buffer.slice(..);
+        {
+            let mut compute_pass = command_encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
+                label: None,
+                timestamp_writes: None,
+            });
+            compute_pass.set_pipeline(&self.pipeline);
+            compute_pass.set_bind_group(0, &self.bind_group, &[]);
+            compute_pass.dispatch_workgroups(local_buffer.len() as u32, 1, 1);
+        }
 
-    let (sender, receiver) = flume::bounded(1);
-    buffer_slice.map_async(wgpu::MapMode::Read, move |r| sender.send(r).unwrap());
+        command_encoder.copy_buffer_to_buffer(
+            &self.storage_buffer,
+            0,
+            &self.output_staging_buffer,
+            0,
+            self.storage_buffer.size(),
+        );
 
-    context.device.poll(wgpu::Maintain::Wait);
-    receiver.recv_async().await.unwrap().unwrap();
-    {
-        let view = buffer_slice.get_mapped_range();
-        local_buffer.copy_from_slice(bytemuck::cast_slice(&view));
+        self.queue.submit(Some(command_encoder.finish()));
+
+        let buffer_slice = self.output_staging_buffer.slice(..);
+
+        let (sender, receiver) = flume::bounded(1);
+        buffer_slice.map_async(wgpu::MapMode::Read, move |r| sender.send(r).unwrap());
+
+        self.device.poll(wgpu::Maintain::Wait);
+        receiver.recv_async().await.unwrap().unwrap();
+        {
+            let view = buffer_slice.get_mapped_range();
+            local_buffer.copy_from_slice(bytemuck::cast_slice(&view));
+        }
+
+        self.output_staging_buffer.unmap();
+    }
+}
+
+pub(crate) fn do_gpu_compute(
+    io_buffer: &mut [u32],
+    camera: &Camera,
+    screen_size: impl Into<Vector2<NonZeroU32>>,
+    max_iterations: NonZeroU32,
+    selected_fractal: FractalType,
+    selected_color: ColorType,
+) {
+    let screen_size = screen_size.into();
+    let buffer_size = screen_size.x.get() * screen_size.y.get();
+
+    assert_eq!(io_buffer.len() as u32, buffer_size);
+
+    let mut instance_lock = INSTANCE.lock().unwrap();
+
+    if instance_lock.is_none() {
+        *instance_lock = Some(WgpuContext::new(buffer_size));
     }
 
-    context.output_staging_buffer.unmap();
+    if let Some(context) = &mut *instance_lock {
+        context.update(camera, screen_size, max_iterations, selected_fractal, selected_color);
+        context.gpu_compute(io_buffer);
+    } else {
+        unreachable!()
+    }
 }

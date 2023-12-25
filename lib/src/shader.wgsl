@@ -18,6 +18,7 @@ var<uniform> args: Args;
 fn index_to_world_pos(index: u32) -> vec2<f32> {
     let screen_x = index % args.screen_size.x;
     let screen_y = (index - screen_x) / args.screen_size.x;
+    
     let screen_pos_normalized = vec2(
         (f32(screen_x) / f32(args.screen_size.x)) - 0.5, 
         (f32(screen_y) / f32(args.screen_size.y)) - 0.5
@@ -48,14 +49,14 @@ fn mandelbrot_escape_time(world_pos: vec2<f32>) -> u32 {
         x2 = pow(x, 2.0);
         y2 = pow(y, 2.0);
 
-        n += 1u;
+        n = n + 1u;
     }
 
     return n;
 }
 
 fn color_histogram(escape_time: u32) -> u32 {
-    return color(0u, 0u, u32(f32(escape_time) / f32(args.max_iterations)));
+    return color(0u, 0u, u32(f32(escape_time) / f32(args.max_iterations)) * 255u);
 }
 
 fn color(red: u32, green: u32, blue: u32) -> u32 {

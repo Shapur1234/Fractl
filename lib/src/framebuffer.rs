@@ -3,8 +3,6 @@ use std::{
     ops::{Add, Deref, DerefMut, Index, IndexMut},
 };
 
-// TODO: macro
-
 use cgmath::Vector2;
 #[cfg(feature = "image")]
 use image::{Rgb, RgbImage};
@@ -117,18 +115,7 @@ impl FrameBuffer {
     }
 
     pub fn raw(self) -> Vec<u32> {
-        // https://users.rust-lang.org/t/current-meta-converting-vec-u-vec-t-where/86603/5
-        unsafe fn transform<T, S>(mut v: Vec<T>) -> Vec<S> {
-            let len = v.len();
-            let capacity = v.capacity();
-            let ptr = v.as_mut_ptr().cast::<S>();
-
-            std::mem::forget(v);
-
-            Vec::from_raw_parts(ptr, len, capacity)
-        }
-
-        unsafe { transform::<Color, u32>(self.data) }
+        unsafe { transform_vec::<Color, u32>(self.data) }
     }
 
     #[cfg(feature = "image")]
@@ -185,4 +172,15 @@ impl IndexMut<Vector2<u32>> for FrameBuffer {
 
 pub trait Draw {
     fn draw(&self, pos: Vector2<u32>, buffer: &mut FrameBuffer);
+}
+
+pub(crate) unsafe fn transform_vec<T, S>(mut v: Vec<T>) -> Vec<S> {
+    // https://users.rust-lang.org/t/current-meta-converting-vec-u-vec-t-where/86603/5
+    let len = v.len();
+    let capacity = v.capacity();
+    let ptr = v.as_mut_ptr().cast::<S>();
+
+    std::mem::forget(v);
+
+    Vec::from_raw_parts(ptr, len, capacity)
 }
