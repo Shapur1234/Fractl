@@ -49,7 +49,6 @@ impl Camera {
 
     #[allow(dead_code)]
     pub fn set_zoom(&mut self, new_zoom: Vector2<f64>) {
-        // TODO: Check max
         assert!(new_zoom.x.is_finite() && new_zoom.y.is_finite());
         self.zoom = new_zoom;
     }

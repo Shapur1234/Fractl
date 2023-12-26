@@ -107,6 +107,11 @@ fn color(red: u32, green: u32, blue: u32) -> u32 {
 @workgroup_size(1)
 fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let index = v_indices[global_id.x];
+
+    if index == 4294967295u {
+        return;
+    }
+
     let world_pos = index_to_world_pos(index);
 
     var escape_time: u32 = 0u;

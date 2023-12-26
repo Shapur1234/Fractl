@@ -17,11 +17,13 @@ lazy_static! {
 
 impl Label {
     pub fn new(text: impl ToString, fontsize: f32, color: Option<Color>) -> Self {
-        // TODO: return error if invalid f32, check for empty text
+        let text = text.to_string();
+
         assert!(fontsize.is_finite() && fontsize > 0.0);
+        assert!(!text.is_empty());
 
         Self {
-            text: text.to_string(),
+            text,
             color: color.unwrap_or_default(),
             fontsize,
         }

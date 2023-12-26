@@ -170,13 +170,13 @@ impl IndexMut<Vector2<u32>> for FrameBuffer {
     }
 }
 
-// TODO: Add fill trait or something
 pub trait Draw {
     fn draw(&self, pos: Vector2<u32>, buffer: &mut FrameBuffer);
 }
 
 pub(crate) unsafe fn transform_vec<T, S>(mut v: Vec<T>) -> Vec<S> {
     // https://users.rust-lang.org/t/current-meta-converting-vec-u-vec-t-where/86603/5
+
     let len = v.len();
     let capacity = v.capacity();
     let ptr = v.as_mut_ptr().cast::<S>();

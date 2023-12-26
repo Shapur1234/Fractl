@@ -1,6 +1,6 @@
 use crate::{Camera, ColorType, FractalType};
 
-use std::{num::NonZeroU32, sync::Mutex};
+use std::{cell::RefCell, num::NonZeroU32, sync::Mutex};
 
 use cgmath::Vector2;
 use wgpu::util::DeviceExt;
@@ -29,16 +29,37 @@ pub(crate) fn do_gpu_compute(
     if let Some(context) = &mut *instance_lock {
         context.update(camera, screen_size, max_iterations, selected_fractal, selected_color);
 
-        let chunks_iterator =
-            io_buffer.chunks_exact_mut(context.device.limits().max_compute_workgroups_per_dimension as usize);
-        for chunk in chunks_iterator {
+        let mut chunks = io_buffer.chunks_exact_mut(context.buffer_len());
+
+        while let Some(chunk) = chunks.next() {
             context.gpu_compute(chunk);
         }
 
-        // let remainder = chunks_iterator.into_remainder();
-        // if remainder.len() != 0 {
-        //     // TODO
-        // }
+        let remainder = chunks.into_remainder();
+        if remainder.len() != 0 {
+            thread_local! {
+                static REUSED_BUFFER: RefCell<Option<Vec<u32>>> = RefCell::new(None);
+            }
+
+            REUSED_BUFFER.with(|reused_buffer| {
+                let mut reused_buffer = reused_buffer.borrow_mut();
+
+                if reused_buffer.is_none() {
+                    *reused_buffer = Some(vec![u32::MAX; context.buffer_len()]);
+                }
+
+                if let Some(reused_buffer) = &mut *reused_buffer {
+                    reused_buffer[..remainder.len()].copy_from_slice(remainder);
+
+                    context.gpu_compute(reused_buffer);
+
+                    remainder.copy_from_slice(&reused_buffer[..remainder.len()]);
+                    // Reset bytes behind the screen?
+                } else {
+                    unreachable!()
+                }
+            });
+        }
     } else {
         unreachable!()
     }
@@ -273,5 +294,9 @@ impl WgpuContext {
         }
 
         self.output_staging_buffer.unmap();
+    }
+
+    fn buffer_len(&self) -> usize {
+        self.device.limits().max_compute_workgroups_per_dimension as usize
     }
 }
