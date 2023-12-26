@@ -110,6 +110,10 @@
           trunkIndexPath = "fractl-gui/index.html";
 
           CARGO_BUILD_TARGET = "wasm32-unknown-unknown";
+
+          wasm-bindgen-cli = pkgs.wasm-bindgen-cli.override {
+            version = "0.2.89";
+          };
         };
 
         cliCargoArtifacts = craneLib.buildDepsOnly cliArgs;

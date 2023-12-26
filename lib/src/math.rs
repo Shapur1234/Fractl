@@ -124,6 +124,7 @@ impl ColorType {
 
                 let n = escape_time as f64;
                 let a = 0.1;
+
                 Color::new(
                     ((0.5 * (a * n).sin() + 0.5) * 255.0) as u8,
                     ((0.5 * (a * n + 2.094).sin() + 0.5) * 255.0) as u8,
