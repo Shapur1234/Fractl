@@ -5,8 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     # The version of wasm-bindgen-cli needs to match the version in Cargo.lock
-    # Update this to include the version you need
-    nixpkgs-for-wasm-bindgen.url = "github:NixOS/nixpkgs/067e11fb004fd21f18000b20e724eededd649544";
+    nixpkgs-for-wasm-bindgen.url = "github:NixOS/nixpkgs/75c13bf6aac049d5fec26c07c28389a72c25a30b";
 
     crane = {
       url = "github:ipetkov/crane";
@@ -93,7 +92,7 @@
         };
         guiArgs = commonArgs // {
           pname = "fractl-gui";
-          cargoExtraArgs = "--package=fractl-gui --features multithread";
+          cargoExtraArgs = "--package=fractl-gui --features gpu";
 
           buildInputs = [
             runtimeLibs
