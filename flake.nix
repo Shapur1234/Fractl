@@ -1,5 +1,5 @@
 {
-  description = "Fractaller";
+  description = "Fractl";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -87,8 +87,8 @@
         };
 
         guiArgs = commonArgs // {
-          pname = "fractl-gui";
-          cargoExtraArgs = ''--package=fractaller --features "gpu f32"'';
+          pname = "fractl";
+          cargoExtraArgs = ''--package=fractl --features "gpu f32"'';
 
           buildInputs = [
             runtimeLibs
@@ -100,10 +100,10 @@
           inherit LD_LIBRARY_PATH;
         };
         wasmArgs = commonArgs // {
-          pname = "fractl-gui-wasm";
-          cargoExtraArgs = "--package=fractl-gui --features f64";
+          pname = "fractl-wasm";
+          cargoExtraArgs = ''--package=fractl --features "f64"'';
 
-          trunkIndexPath = "fractl-gui/index.html";
+          trunkIndexPath = "fractl/index.html";
 
           CARGO_BUILD_TARGET = "wasm32-unknown-unknown";
 
@@ -121,14 +121,14 @@
           cargoArtifacts = guiCargoArtifacts;
 
           postInstall = ''
-            wrapProgram "$out/bin/fractl-gui" --set LD_LIBRARY_PATH ${LD_LIBRARY_PATH};
+            wrapProgram "$out/bin/fractl" --set LD_LIBRARY_PATH ${LD_LIBRARY_PATH};
           '';
         });
         wasmCrate = craneLib.buildTrunkPackage (wasmArgs // {
           cargoArtifacts = wasmCargoArtifacts;
         });
 
-        serveWasm = pkgs.writeShellScriptBin "fractl-wasm" ''
+        serveWasm = pkgs.writeShellScriptBin "fractl" ''
           ${pkgs.python3Minimal}/bin/python3 -m http.server --directory ${wasmCrate} 8000
         '';
 
@@ -150,17 +150,17 @@
         };
 
         packages = {
-          fractaller = guiCrate;
-          fractaller-wasm = wasmCrate;
+          fractl = guiCrate;
+          fractl-wasm = wasmCrate;
         };
 
         apps = {
-          fractaller = flake-utils.lib.mkApp {
-            name = "fractaller";
+          fractl = flake-utils.lib.mkApp {
+            name = "fractl";
             drv = guiCrate;
           };
           fractl-wasm = flake-utils.lib.mkApp {
-            name = "fractaller-wasm";
+            name = "fractl-wasm";
             drv = serveWasm;
           };
         };

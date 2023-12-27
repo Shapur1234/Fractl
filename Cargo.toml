@@ -2,7 +2,7 @@
 resolver = "2"
 members = [
   "lib",
-  "fractaller",
+  "fractl",
 ]
 
 [profile.release]
