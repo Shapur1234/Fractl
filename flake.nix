@@ -88,11 +88,11 @@
 
         cliArgs = commonArgs // {
           pname = "fractl-cli";
-          cargoExtraArgs = "--package=fractl-cli --features ${"multithread f64"}";
+          cargoExtraArgs = ''--package=fractl-cli --features "multithread f64"'';
         };
         guiArgs = commonArgs // {
           pname = "fractl-gui";
-          cargoExtraArgs = "--package=fractl-gui --features ${"gpu f32"}";
+          cargoExtraArgs = ''--package=fractl-gui --features "gpu f32"'';
 
           buildInputs = [
             runtimeLibs
