@@ -1,7 +1,7 @@
 use std::num::NonZeroU32;
 
 use cgmath::Vector2;
-use lib::{Camera, ColorType, Draw, Fill, Fractal, FractalType, FrameBuffer, Label};
+use lib::{Camera, ColorType, Draw, Fill, Float, Fractal, FractalType, FrameBuffer, Label};
 use winit::{
     event::{ElementState, KeyEvent},
     keyboard::{KeyCode, PhysicalKey},
@@ -83,7 +83,7 @@ impl State {
                 .draw(Vector2::new(10, start_y + line_offset * 4), &mut framebuffer);
 
             Label::new(
-                format!("Frametime: {:} ms", frametime.as_secs_f64() * 1000.0),
+                format!("Frametime: {:} ms", frametime.as_secs_f32() * 1000.0),
                 25.0,
                 None,
             )
@@ -189,6 +189,6 @@ impl State {
             .camera
             .screen_to_world_pos(&mouse_pos.map(|x| x as u32), &screen_size.map(|x| x.get()));
 
-        self.camera.zoom_to(by, mouse_world_pos);
+        self.camera.zoom_to(by as Float, mouse_world_pos);
     }
 }

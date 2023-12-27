@@ -7,22 +7,24 @@ use winit::{
     keyboard::{KeyCode, PhysicalKey},
 };
 
+use crate::Float;
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Camera {
-    pub(crate) center_pos: Vector2<f64>,
-    pub(crate) view_size: Vector2<f64>,
-    pub(crate) zoom: Vector2<f64>,
+    pub(crate) center_pos: Vector2<Float>,
+    pub(crate) view_size: Vector2<Float>,
+    pub(crate) zoom: Vector2<Float>,
 }
 
 impl Camera {
     #[allow(dead_code)]
-    const MOVE_INCREMENT: f64 = 0.005;
+    const MOVE_INCREMENT: Float = 0.005;
     #[allow(dead_code)]
-    const ZOOM_INCREMENT: f64 = 0.02;
+    const ZOOM_INCREMENT: Float = 0.02;
     #[allow(dead_code)]
-    const MIN_ZOOM: f64 = 0.1;
+    const MIN_ZOOM: Float = 0.1;
     #[allow(dead_code)]
-    const MAX_ZOOM: f64 = f64::MAX;
+    const MAX_ZOOM: Float = Float::MAX;
 
     pub fn new(screen_size: impl Into<Vector2<NonZeroU32>>) -> Self {
         Self {
@@ -33,22 +35,22 @@ impl Camera {
     }
 
     #[allow(dead_code)]
-    pub fn center_pos(&self) -> Vector2<f64> {
+    pub fn center_pos(&self) -> Vector2<Float> {
         self.center_pos
     }
 
     #[allow(dead_code)]
-    pub fn view_size(&self) -> Vector2<f64> {
+    pub fn view_size(&self) -> Vector2<Float> {
         self.view_size.zip(self.zoom, |x, y| x / y)
     }
 
     #[allow(dead_code)]
-    pub fn zoom(&self) -> Vector2<f64> {
+    pub fn zoom(&self) -> Vector2<Float> {
         self.zoom
     }
 
     #[allow(dead_code)]
-    pub fn set_zoom(&mut self, new_zoom: Vector2<f64>) {
+    pub fn set_zoom(&mut self, new_zoom: Vector2<Float>) {
         assert!(new_zoom.x.is_finite() && new_zoom.y.is_finite());
         self.zoom = new_zoom;
     }
@@ -57,8 +59,8 @@ impl Camera {
         self.view_size.x = Camera::calc_ratio(new_screen_size);
     }
 
-    fn calc_ratio(new_screen_size: impl Into<Vector2<NonZeroU32>>) -> f64 {
-        let new_screen_size = new_screen_size.into().map(|x| x.get() as f64);
+    fn calc_ratio(new_screen_size: impl Into<Vector2<NonZeroU32>>) -> Float {
+        let new_screen_size = new_screen_size.into().map(|x| x.get() as Float);
         new_screen_size.x / new_screen_size.y
     }
 
@@ -142,7 +144,7 @@ impl Camera {
         }
     }
 
-    pub fn zoom_to(&mut self, by: f64, world_pos: Vector2<f64>) {
+    pub fn zoom_to(&mut self, by: Float, world_pos: Vector2<Float>) {
         let zoom_old = self.zoom;
 
         self.zoom.x += Camera::ZOOM_INCREMENT * self.zoom.x * by;
@@ -169,8 +171,8 @@ impl Camera {
         }
     }
 
-    pub fn screen_to_world_pos(&self, screen_pos: &Vector2<u32>, screen_size: &Vector2<u32>) -> Vector2<f64> {
-        let screen_pos_normalized = screen_pos.zip(*screen_size, |pos, size| (pos as f64 / size as f64) - 0.5);
+    pub fn screen_to_world_pos(&self, screen_pos: &Vector2<u32>, screen_size: &Vector2<u32>) -> Vector2<Float> {
+        let screen_pos_normalized = screen_pos.zip(*screen_size, |pos, size| (pos as Float / size as Float) - 0.5);
 
         Vector2::new(
             ((screen_pos_normalized.x * self.view_size.x) / self.zoom.x) + self.center_pos.x,

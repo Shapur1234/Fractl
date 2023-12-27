@@ -4,8 +4,11 @@ Fractal renderer
 
 ### TODO
 
-- Julia set, multibrot
-- Wasm gpu
+- Delete cli
+- WebGpu with compute shader
+- Docs
+- More fractals: Julia set, multibrot
 - Mouse panning improved scroll-zoom
 - Optimize
-- f32, f64 toggle
+- Redox port
+- Publish to crates.io

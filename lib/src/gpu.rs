@@ -54,7 +54,6 @@ pub(crate) fn do_gpu_compute(
                     context.gpu_compute(reused_buffer);
 
                     remainder.copy_from_slice(&reused_buffer[..remainder.len()]);
-                    // Reset bytes behind the screen?
                 } else {
                     unreachable!()
                 }

@@ -1,9 +1,9 @@
-use std::{f64::consts::PI, fmt::Display, num::NonZeroU32};
+use std::{fmt::Display, num::NonZeroU32};
 
 use cfg_if::cfg_if;
 use cgmath::Vector2;
 
-use crate::{framebuffer::Color, Camera, Fill};
+use crate::{framebuffer::Color, Camera, Fill, Float};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum FractalType {
@@ -27,7 +27,7 @@ impl FractalType {
         }
     }
 
-    pub fn escape_time(&self, world_pos: Vector2<f64>, max_iterations: NonZeroU32) -> u32 {
+    pub fn escape_time(&self, world_pos: Vector2<Float>, max_iterations: NonZeroU32) -> u32 {
         match self {
             Self::Mandelbrot => {
                 // https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Optimized_escape_time_algorithms
@@ -105,12 +105,24 @@ impl ColorType {
             Self::Histogram => {
                 // https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Histogram_coloring
 
-                Color::new(0, 0, (((escape_time as f64) / (max_iterations as f64)) * 255.0) as u8)
+                Color::new(
+                    0,
+                    0,
+                    (((escape_time as Float) / (max_iterations as Float)) * 255.0) as u8,
+                )
             }
             Self::LCH => {
                 // https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#LCH_coloring
 
-                let s = (escape_time as f64) / (max_iterations as f64);
+                cfg_if! {
+                    if #[cfg(feature = "f32")] {
+                        const PI: f32 = std::f32::consts::PI;
+                    } else if #[cfg(feature = "f64")] {
+                        const PI: f64 = std::f64::consts::PI;
+                    }
+                }
+
+                let s = (escape_time as Float) / (max_iterations as Float);
                 let v = 1.0 - (PI * s).cos().powi(2);
 
                 Color::new(
@@ -122,7 +134,7 @@ impl ColorType {
             Self::OLC => {
                 // https://github.com/OneLoneCoder/Javidx9/blob/54b26051d0fd1491c325ae09f50a7fc3f25030e8/PixelGameEngine/SmallerProjects/OneLoneCoder_PGE_Mandelbrot.cpp#L543C3-L543C3
 
-                let n = escape_time as f64;
+                let n = escape_time as Float;
                 let a = 0.1;
 
                 Color::new(

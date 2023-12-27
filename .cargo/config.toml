@@ -1,5 +1,0 @@
-[alias]
-rr-gui = "run --release --package=fractl-gui --features multithread -- -C target-cpu=native"
-rr-cli = "run --release --package=fractl-cli --features multithread -- -C target-cpu=native"
-rg-gui = "run --release --package=fractl-gui --features gpu -- -C target-cpu=native"
-rg-cli = "run --release --package=fractl-cli --features gpu -- -C target-cpu=native"
