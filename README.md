@@ -9,4 +9,3 @@ Fractal renderer
 - Mouse panning improved scroll-zoom
 - Optimize
 - f32, f64 toggle
-- Redo framebuffer trait

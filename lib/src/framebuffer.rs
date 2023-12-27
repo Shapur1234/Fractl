@@ -174,6 +174,10 @@ pub trait Draw {
     fn draw(&self, pos: Vector2<u32>, buffer: &mut FrameBuffer);
 }
 
+pub trait Fill {
+    fn fill(&self, buffer: &mut FrameBuffer);
+}
+
 pub(crate) unsafe fn transform_vec<T, S>(mut v: Vec<T>) -> Vec<S> {
     // https://users.rust-lang.org/t/current-meta-converting-vec-u-vec-t-where/86603/5
 

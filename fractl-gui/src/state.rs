@@ -1,16 +1,14 @@
 use std::num::NonZeroU32;
 
 use cgmath::Vector2;
-// #[cfg(feature = "gpu")]
-// use lib::{gpu_compute, WgpuContext};
-use lib::{Camera, ColorType, Draw, Fractal, FractalType, FrameBuffer, Label};
+use lib::{Camera, ColorType, Draw, Fill, Fractal, FractalType, FrameBuffer, Label};
 use winit::{
     event::{ElementState, KeyEvent},
     keyboard::{KeyCode, PhysicalKey},
 };
 
 const DEFAULT_MAX_ITERATIONS: NonZeroU32 =
-    unsafe { NonZeroU32::new_unchecked(if cfg!(debug_assertions) { 16 } else { 64 }) };
+    unsafe { NonZeroU32::new_unchecked(if cfg!(debug_assertions) { 64 } else { 512 }) };
 const DEFAULT_SHOW_CROSSHAIR: bool = true;
 const DEFAULT_SHOW_UI: bool = true;
 
@@ -52,7 +50,7 @@ impl State {
                 self.camera.clone(),
                 self.max_iterations,
             )
-            .draw(Vector2::new(0, 0), &mut framebuffer);
+            .fill(&mut framebuffer);
 
             now.elapsed()
         };

@@ -9,6 +9,8 @@ repository = "https://github.com/Shapur1234/Fractaller"
 [features]
 multithread = [ "dep:rayon" ]
 gpu = [ "dep:bytemuck", "dep:flume", "dep:pollster", "dep:wgpu" ]
+f32 = [ ]
+f64 = [ ]
 image = [ "dep:image" ]
 winit = [ "dep:winit" ]
 

@@ -32,8 +32,6 @@ impl Label {
 
 impl Draw for Label {
     fn draw(&self, pos: Vector2<u32>, buffer: &mut FrameBuffer) {
-        // TODO: Implement size_bounds
-
         const SPACE_BETWEEN_CHARS_MULT: f32 = 10.0;
         const SIZE_OF_SPACE_MULT: f32 = 2.0;
 

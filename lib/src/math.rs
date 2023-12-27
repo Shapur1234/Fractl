@@ -3,7 +3,7 @@ use std::{f64::consts::PI, fmt::Display, num::NonZeroU32};
 use cfg_if::cfg_if;
 use cgmath::Vector2;
 
-use crate::{framebuffer::Color, Camera, Draw};
+use crate::{framebuffer::Color, Camera, Fill};
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum FractalType {
@@ -166,8 +166,8 @@ impl Fractal {
     }
 }
 
-impl Draw for Fractal {
-    fn draw(&self, pos: Vector2<u32>, buffer: &mut crate::FrameBuffer) {
+impl Fill for Fractal {
+    fn fill(&self, buffer: &mut crate::FrameBuffer) {
         buffer.data = {
             let data;
             cfg_if! {
@@ -179,7 +179,7 @@ impl Draw for Fractal {
                         .map(|index| buffer.index_to_pos(index))
                         .map(|screen_pos|
                             self.fractal_type.escape_time(
-                                self.camera.screen_to_world_pos(&(screen_pos + pos), buffer.size()),
+                                self.camera.screen_to_world_pos(&(screen_pos), buffer.size()),
                                 self.max_iterations,
                             )
                         )
@@ -208,7 +208,7 @@ impl Draw for Fractal {
                         .map(|index| buffer.index_to_pos(index))
                         .map(|screen_pos|
                             self.fractal_type.escape_time(
-                                self.camera.screen_to_world_pos(&(screen_pos + pos), buffer.size()),
+                                self.camera.screen_to_world_pos(&(screen_pos), buffer.size()),
                                 self.max_iterations,
                             )
                         )

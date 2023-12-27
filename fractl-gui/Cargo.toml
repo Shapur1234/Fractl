@@ -7,8 +7,10 @@ license = "GPL-3.0-or-later"
 repository = "https://github.com/Shapur1234/Fractaller"
 
 [features]
-gpu = [ "lib/gpu"]
+gpu = [ "lib/gpu" ]
 multithread = [ "lib/multithread" ]
+f32 = [ "lib/f32" ]
+f64 = [ "lib/f64" ]
 
 [dependencies]
 cfg-if = "1.0"
@@ -23,6 +25,5 @@ instant = "0.1"
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1"
 instant = { version = "0.1", features = [ "wasm-bindgen" ] }
-lib = { path = "../lib", features = [ "winit" ] }
 wasm-bindgen = "0.2"
 web-sys = { version ="0.3", features = [ "HtmlCollection" ] }
