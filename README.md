@@ -4,7 +4,6 @@ Fractal renderer
 
 ### TODO
 
-- Delete cli
 - WebGpu with compute shader
 - Docs
 - More fractals: Julia set, multibrot

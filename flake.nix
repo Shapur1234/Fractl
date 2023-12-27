@@ -86,13 +86,9 @@
           ];
         };
 
-        cliArgs = commonArgs // {
-          pname = "fractl-cli";
-          cargoExtraArgs = ''--package=fractl-cli --features "multithread f64"'';
-        };
         guiArgs = commonArgs // {
           pname = "fractl-gui";
-          cargoExtraArgs = ''--package=fractl-gui --features "gpu f32"'';
+          cargoExtraArgs = ''--package=fractaller --features "gpu f32"'';
 
           buildInputs = [
             runtimeLibs
@@ -105,7 +101,7 @@
         };
         wasmArgs = commonArgs // {
           pname = "fractl-gui-wasm";
-          cargoExtraArgs = "--package=fractl-gui";
+          cargoExtraArgs = "--package=fractl-gui --features f64";
 
           trunkIndexPath = "fractl-gui/index.html";
 
@@ -116,15 +112,11 @@
           };
         };
 
-        cliCargoArtifacts = craneLib.buildDepsOnly cliArgs;
         guiCargoArtifacts = craneLib.buildDepsOnly guiArgs;
         wasmCargoArtifacts = craneLib.buildDepsOnly (wasmArgs // {
           doCheck = false;
         });
 
-        cliCrate = craneLib.buildPackage (cliArgs // {
-          cargoArtifacts = cliCargoArtifacts;
-        });
         guiCrate = craneLib.buildPackage (guiArgs // {
           cargoArtifacts = guiCargoArtifacts;
 
@@ -140,12 +132,6 @@
           ${pkgs.python3Minimal}/bin/python3 -m http.server --directory ${wasmCrate} 8000
         '';
 
-        cliCrateClippy = craneLib.cargoClippy (cliArgs // {
-          inherit src;
-          cargoArtifacts = cliCargoArtifacts;
-
-          cargoClippyExtraArgs = "-- --deny warnings";
-        });
         guiCrateClippy = craneLib.cargoClippy (guiArgs // {
           inherit src;
           cargoArtifacts = guiCargoArtifacts;
@@ -156,8 +142,6 @@
       {
         checks = {
           inherit
-            cliCrate
-            cliCrateClippy
             guiCrate
             guiCrateClippy
             wasmCrate;
@@ -166,22 +150,17 @@
         };
 
         packages = {
-          fractl-cli = cliCrate;
-          fractl-gui = guiCrate;
-          fractl-wasm = wasmCrate;
+          fractaller = guiCrate;
+          fractaller-wasm = wasmCrate;
         };
 
         apps = {
-          fractl-cli = flake-utils.lib.mkApp {
-            name = "fractl-cli";
-            drv = cliCrate;
-          };
-          fractl-gui = flake-utils.lib.mkApp {
-            name = "fractl-gui";
+          fractaller = flake-utils.lib.mkApp {
+            name = "fractaller";
             drv = guiCrate;
           };
           fractl-wasm = flake-utils.lib.mkApp {
-            name = "fractl-wasm";
+            name = "fractaller-wasm";
             drv = serveWasm;
           };
         };
