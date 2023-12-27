@@ -7,17 +7,18 @@ license = "GPL-3.0-or-later"
 repository = "https://github.com/Shapur1234/Fractaller"
 
 [features]
+default = [ "f64" ]
 gpu = [ "lib/gpu" ]
 multithread = [ "lib/multithread" ]
 f32 = [ "lib/f32" ]
 f64 = [ "lib/f64" ]
 
 [dependencies]
+lib = { path = "../lib", features = [ "winit" ] }
 cfg-if = "1.0"
 cgmath = "0.18"
 softbuffer = "0.4"
 winit = "0.29"
-lib = { path = "../lib", features = [ "winit" ] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 instant = "0.1"

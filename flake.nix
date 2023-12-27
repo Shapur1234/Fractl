@@ -88,7 +88,20 @@
 
         guiArgs = commonArgs // {
           pname = "fractl";
-          cargoExtraArgs = ''--package=fractl --features "gpu f32"'';
+          cargoExtraArgs = ''--package=fractl --no-default-features --features "multithread f64"'';
+
+          buildInputs = [
+            runtimeLibs
+          ];
+          nativeBuildInputs = with pkgs; [
+            makeWrapper
+          ];
+
+          inherit LD_LIBRARY_PATH;
+        };
+        guiGpuArgs = commonArgs // {
+          pname = "fractl-gpu";
+          cargoExtraArgs = ''--package=fractl --no-default-features --features "gpu f32"'';
 
           buildInputs = [
             runtimeLibs
@@ -101,7 +114,7 @@
         };
         wasmArgs = commonArgs // {
           pname = "fractl-wasm";
-          cargoExtraArgs = ''--package=fractl --features "f64"'';
+          cargoExtraArgs = ''--package=fractl'';
 
           trunkIndexPath = "fractl/index.html";
 
@@ -113,6 +126,7 @@
         };
 
         guiCargoArtifacts = craneLib.buildDepsOnly guiArgs;
+        guiGpuCargoArtifacts = craneLib.buildDepsOnly guiGpuArgs;
         wasmCargoArtifacts = craneLib.buildDepsOnly (wasmArgs // {
           doCheck = false;
         });
@@ -124,11 +138,19 @@
             wrapProgram "$out/bin/fractl" --set LD_LIBRARY_PATH ${LD_LIBRARY_PATH};
           '';
         });
+        guiGpuCrate = craneLib.buildPackage (guiGpuArgs // {
+          cargoArtifacts = guiGpuCargoArtifacts;
+
+          postInstall = ''
+            mv $out/bin/fractl $out/bin/fractl-gpu
+            wrapProgram "$out/bin/fractl-gpu" --set LD_LIBRARY_PATH ${LD_LIBRARY_PATH};
+          '';
+        });
         wasmCrate = craneLib.buildTrunkPackage (wasmArgs // {
           cargoArtifacts = wasmCargoArtifacts;
         });
 
-        serveWasm = pkgs.writeShellScriptBin "fractl" ''
+        serveWasm = pkgs.writeShellScriptBin "fractl-wasm" ''
           ${pkgs.python3Minimal}/bin/python3 -m http.server --directory ${wasmCrate} 8000
         '';
 
@@ -143,6 +165,7 @@
         checks = {
           inherit
             guiCrate
+            guiGpuCrate
             guiCrateClippy
             wasmCrate;
 
@@ -151,6 +174,7 @@
 
         packages = {
           fractl = guiCrate;
+          fractl-gpu = guiGpuCrate;
           fractl-wasm = wasmCrate;
         };
 
@@ -158,6 +182,10 @@
           fractl = flake-utils.lib.mkApp {
             name = "fractl";
             drv = guiCrate;
+          };
+          fractl-gpu = flake-utils.lib.mkApp {
+            name = "fractl-gpu";
+            drv = guiGpuCrate;
           };
           fractl-wasm = flake-utils.lib.mkApp {
             name = "fractl-wasm";
