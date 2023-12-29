@@ -7,8 +7,18 @@ use winit::{
     keyboard::{KeyCode, PhysicalKey},
 };
 
-const DEFAULT_MAX_ITERATIONS: NonZeroU32 =
-    unsafe { NonZeroU32::new_unchecked(if cfg!(debug_assertions) { 64 } else { 512 }) };
+const DEFAULT_MAX_ITERATIONS: NonZeroU32 = unsafe {
+    NonZeroU32::new_unchecked(
+        if cfg!(debug_assertions) { 32 } else { 64 }
+            * if cfg!(feature = "gpu") {
+                16
+            } else if cfg!(feature = "multithread") {
+                8
+            } else {
+                1
+            },
+    )
+};
 const DEFAULT_SHOW_CROSSHAIR: bool = true;
 const DEFAULT_SHOW_UI: bool = true;
 
