@@ -13,7 +13,7 @@ pub enum FractalType {
 }
 
 impl FractalType {
-    const NUM_OF_VARIANTS: u8 = 2;
+    const NUM_OF_VARIANTS: u8 = 3;
     const DEFAULT_MULTIBROT_ARGUEMENT: Float = 4.0;
 
     pub const fn id(&self) -> u8 {
@@ -36,7 +36,7 @@ impl FractalType {
     }
 
     pub const fn prev(&self) -> Self {
-        Self::from_id(self.id() - 1)
+        Self::from_id(self.id() + Self::NUM_OF_VARIANTS - 1)
     }
 
     pub fn change_multi_parametr(&mut self, by: Float) {
@@ -56,8 +56,8 @@ impl FractalType {
     }
 
     pub fn escape_time(&self, world_pos: Vector2<Float>, max_iterations: NonZeroU32) -> u32 {
-        let max_iterations = max_iterations.get();
         let mut n = 0;
+        let max_iterations = max_iterations.get();
 
         match self {
             Self::Mandelbrot => {
@@ -73,7 +73,7 @@ impl FractalType {
                 } else {
                     let (mut x2, mut y2, mut x, mut y) = (0.0, 0.0, 0.0, 0.0);
 
-                    while x2 + y2 <= 4.0 && n < max_iterations {
+                    while (x2 + y2 <= 4.0) && (n < max_iterations) {
                         y = 2.0 * x * y + world_pos.y;
                         x = x2 - y2 + world_pos.x;
 
@@ -95,9 +95,9 @@ impl FractalType {
                     let x_y_squared_exp = (x.powi(2) + y.powi(2)).powf(exponent / 2.0);
                     let exponent_atan = exponent * y.atan2(x);
 
-                    let xtmp = x_y_squared_exp * (exponent_atan).cos() + world_pos.x;
+                    let x_tmp = x_y_squared_exp * (exponent_atan).cos() + world_pos.x;
                     y = x_y_squared_exp * (exponent_atan).sin() + world_pos.y;
-                    x = xtmp;
+                    x = x_tmp;
 
                     n += 1;
                 }
