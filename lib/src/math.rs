@@ -13,7 +13,7 @@ pub enum FractalType {
 }
 
 impl FractalType {
-    const NUM_OF_VARIANTS: u8 = 3;
+    const NUM_OF_VARIANTS: u8 = 2;
     const DEFAULT_MULTIBROT_ARGUEMENT: Float = 4.0;
 
     pub const fn id(&self) -> u8 {
