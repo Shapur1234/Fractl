@@ -74,7 +74,7 @@ struct ArgsUniform {
     max_iterations: u32,
     selected_fractal: u32,
     selected_color: u32,
-    _padding: u32,
+    multi_exponent: f32,
 }
 
 impl ArgsUniform {
@@ -91,9 +91,9 @@ impl ArgsUniform {
             zoom: camera.zoom.map(|x| x as f32).into(),
             center_pos: camera.center_pos.map(|x| x as f32).into(),
             max_iterations: max_iterations.get(),
-            selected_fractal: selected_fractal as u32,
+            selected_fractal: selected_fractal.id() as u32,
             selected_color: selected_color as u32,
-            _padding: 0,
+            multi_exponent: selected_fractal.multi_parametr().unwrap_or(0.0),
         }
     }
 }

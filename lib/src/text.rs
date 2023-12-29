@@ -10,7 +10,7 @@ pub struct Label {
     fontsize: f32,
 }
 
-static FONT_BYTES: &[u8] = include_bytes!("../resource/JetBrainsMonoNerdFont-Regular.ttf");
+static FONT_BYTES: &[u8] = include_bytes!("../resource/WantedSans-Regular.ttf");
 lazy_static! {
     static ref FONT: Font = Font::from_bytes(FONT_BYTES, FontSettings::default()).unwrap();
 }

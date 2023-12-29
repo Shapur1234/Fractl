@@ -72,7 +72,7 @@ impl State {
 
         if self.show_ui {
             let (start_y, line_offset) = (40, 40);
-            Label::new("Fractaller", 30.0, None).draw(Vector2::new(10, start_y), &mut framebuffer);
+            Label::new("Fractaller", 40.0, None).draw(Vector2::new(10, start_y + line_offset / 2), &mut framebuffer);
 
             Label::new(format!("Selected fractal: {:}", self.selected_fractal_type), 25.0, None)
                 .draw(Vector2::new(10, start_y + line_offset * 2), &mut framebuffer);
@@ -116,14 +116,15 @@ impl State {
     }
 
     fn handle_state_keyboard_input(&mut self, key_event: &KeyEvent) -> bool {
-        const CHANGE_MAX_ITERATIONS_MULT: f64 = 1.5;
+        const CHANGE_MAX_ITERATIONS_MULT: Float = 1.5;
+        const CHANGE_MULTIBROT_EXPONENT_STEP: Float = 0.05;
 
         if key_event.state == ElementState::Pressed {
             if let PhysicalKey::Code(key_code) = key_event.physical_key {
                 match key_code {
                     KeyCode::KeyK => {
                         self.max_iterations = NonZeroU32::new(
-                            ((((self.max_iterations.get() as f64) * CHANGE_MAX_ITERATIONS_MULT).ceil()) as i64)
+                            ((((self.max_iterations.get() as Float) * CHANGE_MAX_ITERATIONS_MULT).ceil()) as i64)
                                 .try_into()
                                 .unwrap_or_default(),
                         )
@@ -133,7 +134,7 @@ impl State {
                     }
                     KeyCode::KeyL => {
                         self.max_iterations = NonZeroU32::new(
-                            ((((self.max_iterations.get() as f64) / CHANGE_MAX_ITERATIONS_MULT).ceil()) as i64)
+                            ((((self.max_iterations.get() as Float) / CHANGE_MAX_ITERATIONS_MULT).ceil()) as i64)
                                 .try_into()
                                 .unwrap_or_default(),
                         )
@@ -167,6 +168,18 @@ impl State {
                     }
                     KeyCode::KeyU => {
                         self.show_ui ^= true;
+
+                        true
+                    }
+                    KeyCode::KeyZ => {
+                        self.selected_fractal_type
+                            .change_multi_parametr(-CHANGE_MULTIBROT_EXPONENT_STEP);
+
+                        true
+                    }
+                    KeyCode::KeyX => {
+                        self.selected_fractal_type
+                            .change_multi_parametr(CHANGE_MULTIBROT_EXPONENT_STEP);
 
                         true
                     }

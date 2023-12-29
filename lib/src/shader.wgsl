@@ -7,7 +7,7 @@ struct Args {
     max_iterations: u32,
     selected_fractal: u32,
     selected_color: u32,
-    _padding: u32,
+    multi_exponent: f32,
 }
 
 @group(0) @binding(0)
@@ -48,7 +48,7 @@ fn mandelbrot_escape_time(world_pos: vec2<f32>) -> u32 {
         return args.max_iterations;
     } else {
         loop  {
-            if !(x2 + y2 <= 4.0 && n < args.max_iterations) {
+            if !((x2 + y2 <= 4.0 )&& (n < args.max_iterations)) {
                 break;
             }
 
@@ -60,6 +60,33 @@ fn mandelbrot_escape_time(world_pos: vec2<f32>) -> u32 {
 
             n += 1u;
         }
+    }
+
+    return n;
+}
+
+fn multibrot_escape_time(world_pos: vec2<f32>) -> u32 {
+    // https://en.wikipedia.org/wiki/Multibrot_set#Rendering_images
+
+    var n: u32 = 0u;
+
+    var x: f32 = world_pos.x;
+    var y: f32 = world_pos.y;
+
+    loop {
+        let x_y_squared = pow(x, 2.0) + pow(y, 2.0);
+        if !((x_y_squared <= pow(args.multi_exponent, 2.0)) && (n < args.max_iterations)) {
+            break;
+        }
+
+        let x_y_squared_exp = pow(x_y_squared, args.multi_exponent / 2.0);
+        let exponent_atan = args.multi_exponent * atan2(y, x);
+
+        let x_tmp = x_y_squared_exp * cos(exponent_atan) + world_pos.x;
+        y = x_y_squared_exp * sin(exponent_atan) + world_pos.y;
+        x = x_tmp;
+
+        n += 1u;
     }
 
     return n;
@@ -118,6 +145,9 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
     switch args.selected_fractal {
         case 0u: {
             escape_time = mandelbrot_escape_time(world_pos);
+        }
+        case 1u: {
+            escape_time = multibrot_escape_time(world_pos);
         }
         default: {
             escape_time = u32(-1);

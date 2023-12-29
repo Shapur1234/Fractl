@@ -5,34 +5,63 @@ use cgmath::Vector2;
 
 use crate::{framebuffer::Color, Camera, Fill, Float};
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum FractalType {
     #[default]
-    Mandelbrot = 0,
-    Multibrot = 1,
+    Mandelbrot,
+    Multibrot(Float),
 }
 
 impl FractalType {
-    pub const fn next(&self) -> Self {
+    const NUM_OF_VARIANTS: u8 = 2;
+    const DEFAULT_MULTIBROT_ARGUEMENT: Float = 4.0;
+
+    pub const fn id(&self) -> u8 {
         match self {
-            Self::Mandelbrot => Self::Multibrot,
-            Self::Multibrot => Self::Mandelbrot,
+            Self::Mandelbrot => 0,
+            Self::Multibrot(_) => 1,
         }
     }
 
+    pub const fn from_id(id: u8) -> Self {
+        match id % Self::NUM_OF_VARIANTS {
+            0 => Self::Mandelbrot,
+            1 => Self::Multibrot(Self::DEFAULT_MULTIBROT_ARGUEMENT),
+            _ => unreachable!(),
+        }
+    }
+
+    pub const fn next(&self) -> Self {
+        Self::from_id(self.id() + 1)
+    }
+
     pub const fn prev(&self) -> Self {
+        Self::from_id(self.id() - 1)
+    }
+
+    pub fn change_multi_parametr(&mut self, by: Float) {
+        if let Self::Multibrot(exponent) = self {
+            let new_exponent = *exponent + by;
+            if new_exponent.is_finite() {
+                *self = FractalType::Multibrot(new_exponent)
+            }
+        }
+    }
+
+    pub fn multi_parametr(&self) -> Option<Float> {
         match self {
-            Self::Mandelbrot => Self::Multibrot,
-            Self::Multibrot => Self::Mandelbrot,
+            Self::Multibrot(exponent) => Some(*exponent),
+            _ => None,
         }
     }
 
     pub fn escape_time(&self, world_pos: Vector2<Float>, max_iterations: NonZeroU32) -> u32 {
+        let max_iterations = max_iterations.get();
+        let mut n = 0;
+
         match self {
             Self::Mandelbrot => {
                 // https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Optimized_escape_time_algorithms
-
-                let max_iterations = max_iterations.get();
 
                 let is_in_main_bulb = {
                     let q = (world_pos.x - 0.25).powi(2) + world_pos.y.powi(2);
@@ -42,7 +71,6 @@ impl FractalType {
                 if is_in_main_bulb {
                     max_iterations
                 } else {
-                    let mut n = 0;
                     let (mut x2, mut y2, mut x, mut y) = (0.0, 0.0, 0.0, 0.0);
 
                     while x2 + y2 <= 4.0 && n < max_iterations {
@@ -58,7 +86,24 @@ impl FractalType {
                     n
                 }
             }
-            Self::Multibrot => todo!(),
+            Self::Multibrot(exponent) => {
+                // https://en.wikipedia.org/wiki/Multibrot_set#Rendering_images
+
+                let (mut x, mut y) = (world_pos.x, world_pos.y);
+
+                while ((x.powi(2) + y.powi(2)) <= exponent.powi(2)) && (n < max_iterations) {
+                    let x_y_squared_exp = (x.powi(2) + y.powi(2)).powf(exponent / 2.0);
+                    let exponent_atan = exponent * y.atan2(x);
+
+                    let xtmp = x_y_squared_exp * (exponent_atan).cos() + world_pos.x;
+                    y = x_y_squared_exp * (exponent_atan).sin() + world_pos.y;
+                    x = xtmp;
+
+                    n += 1;
+                }
+
+                n
+            }
         }
     }
 }
@@ -67,7 +112,7 @@ impl Display for FractalType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             FractalType::Mandelbrot => write!(f, "Mandelbrot"),
-            FractalType::Multibrot => write!(f, "Multibrot"),
+            FractalType::Multibrot(exponent) => write!(f, "Multibrot ({:?})", exponent),
         }?;
 
         Ok(())
@@ -77,26 +122,37 @@ impl Display for FractalType {
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum ColorType {
     #[default]
-    Histogram = 0,
-    LCH = 1,
-    OLC = 2,
+    Histogram,
+    LCH,
+    OLC,
 }
 
 impl ColorType {
-    pub const fn next(&self) -> Self {
+    const NUM_OF_VARIANTS: u8 = 3;
+
+    pub const fn id(&self) -> u8 {
         match self {
-            Self::Histogram => Self::LCH,
-            Self::LCH => Self::OLC,
-            Self::OLC => Self::Histogram,
+            Self::Histogram => 0,
+            Self::LCH => 1,
+            Self::OLC => 2,
         }
     }
 
-    pub const fn prev(&self) -> Self {
-        match self {
-            Self::Histogram => Self::OLC,
-            Self::LCH => Self::Histogram,
-            Self::OLC => Self::LCH,
+    pub const fn from_id(id: u8) -> Self {
+        match id % Self::NUM_OF_VARIANTS {
+            0 => Self::Histogram,
+            1 => Self::LCH,
+            2 => Self::OLC,
+            _ => unreachable!(),
         }
+    }
+
+    pub const fn next(&self) -> Self {
+        Self::from_id(self.id() + 1)
+    }
+
+    pub const fn prev(&self) -> Self {
+        Self::from_id(self.id() - Self::NUM_OF_VARIANTS - 1)
     }
 
     pub fn escape_time_color(&self, escape_time: u32, max_iterations: NonZeroU32) -> Color {
@@ -181,12 +237,11 @@ impl Fractal {
 impl Fill for Fractal {
     fn fill(&self, buffer: &mut crate::FrameBuffer) {
         buffer.data = {
-            let data;
             cfg_if! {
                 if #[cfg(feature = "multithread")] {
                     use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
-                    data = (0..buffer.size().x * buffer.size().y)
+                    (0..buffer.size().x * buffer.size().y)
                         .into_par_iter()
                         .map(|index| buffer.index_to_pos(index))
                         .map(|screen_pos|
@@ -196,7 +251,7 @@ impl Fill for Fractal {
                             )
                         )
                         .map(|escape_time| self.color_type.escape_time_color(escape_time, self.max_iterations))
-                        .collect::<Vec<_>>();
+                        .collect::<Vec<_>>()
                 } else if #[cfg(feature = "gpu")] {
                     use crate::{framebuffer::transform_vec, gpu::do_gpu_compute};
 
@@ -213,10 +268,9 @@ impl Fill for Fractal {
                         self.color_type
                     );
 
-                    data = unsafe { transform_vec::<u32, Color>(io_buffer) };
+                    unsafe { transform_vec::<u32, Color>(io_buffer) }
                 } else {
-                    data = (0..buffer.size().x * buffer.size().y)
-                        .into_iter()
+                    (0..buffer.size().x * buffer.size().y)
                         .map(|index| buffer.index_to_pos(index))
                         .map(|screen_pos|
                             self.fractal_type.escape_time(
@@ -225,11 +279,9 @@ impl Fill for Fractal {
                             )
                         )
                         .map(|escape_time| self.color_type.escape_time_color(escape_time, self.max_iterations))
-                        .collect::<Vec<_>>();
+                        .collect::<Vec<_>>()
                 }
-            };
-
-            data
+            }
         }
     }
 }
