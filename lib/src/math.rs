@@ -152,7 +152,7 @@ impl ColorType {
     }
 
     pub const fn prev(&self) -> Self {
-        Self::from_id(self.id() - Self::NUM_OF_VARIANTS - 1)
+        Self::from_id(self.id() + Self::NUM_OF_VARIANTS - 1)
     }
 
     pub fn escape_time_color(&self, escape_time: u32, max_iterations: NonZeroU32) -> Color {
