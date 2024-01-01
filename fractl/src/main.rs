@@ -136,12 +136,21 @@ fn main() {
                                 mouse_pos.y = position.y;
                             }
                             WindowEvent::MouseWheel {
-                                delta: MouseScrollDelta::LineDelta(_, y),
+                                delta: MouseScrollDelta::LineDelta(x, y),
                                 ..
                             } => {
-                                state.zoom_to(y as f64, mouse_pos, screen_size);
-
-                                window.request_redraw()
+                                if state.handle_mousewheel_input(Vector2::new(x, y)) {
+                                    window.request_redraw()
+                                }
+                            }
+                            WindowEvent::MouseInput {
+                                state: element_state,
+                                button,
+                                ..
+                            } => {
+                                if state.handle_mouse_input(button, element_state, mouse_pos, screen_size) {
+                                    window.request_redraw()
+                                }
                             }
                             _ => {}
                         }

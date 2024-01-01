@@ -62,7 +62,7 @@ impl Draw for Label {
                             }
                         });
 
-                        if (in_buffer_pos.x < buffer.size().x) && (in_buffer_pos.y < buffer.size().y) {
+                        if (in_buffer_pos.x < buffer.size().x.get()) && (in_buffer_pos.y < buffer.size().y.get()) {
                             let glyph_intensity =
                                 (glyph_bitmap[(glyph_pos.y * glyph_size.x + glyph_pos.x) as usize] as f32) / 255.0;
 

@@ -241,7 +241,7 @@ impl Fill for Fractal {
                 if #[cfg(feature = "multithread")] {
                     use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
-                    (0..buffer.size().x * buffer.size().y)
+                    (0..buffer.size().x.get() * buffer.size().y.get())
                         .into_par_iter()
                         .map(|index| buffer.index_to_pos(index))
                         .map(|screen_pos|
@@ -270,7 +270,7 @@ impl Fill for Fractal {
 
                     unsafe { transform_vec::<u32, Color>(io_buffer) }
                 } else {
-                    (0..buffer.size().x * buffer.size().y)
+                    (0..buffer.size().x.get() * buffer.size().y.get())
                         .map(|index| buffer.index_to_pos(index))
                         .map(|screen_pos|
                             self.fractal_type.escape_time(

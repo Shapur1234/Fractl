@@ -89,22 +89,22 @@ impl Add for Color {
 #[derive(Clone, Debug, Hash)]
 pub struct FrameBuffer {
     pub(crate) data: Vec<Color>,
-    size: Vector2<u32>,
+    size: Vector2<NonZeroU32>,
 }
 
 impl FrameBuffer {
     pub fn new(size: impl Into<Vector2<NonZeroU32>>) -> Self {
-        let size = size.into().map(|x| x.get());
+        let size = size.into();
 
         Self {
-            data: vec![Color::default(); (size.x * size.y) as usize],
+            data: vec![Color::default(); (size.x.get() * size.y.get()) as usize],
             size,
         }
     }
 
     pub fn map_pixels(&mut self, f: impl Fn(Vector2<u32>) -> Color + Send + Sync) {
         self.data = {
-            let range = 0..self.size.x * self.size.y;
+            let range = 0..self.size.x.get() * self.size.y.get();
 
             range
                 .into_iter()
@@ -132,19 +132,19 @@ impl FrameBuffer {
         img
     }
 
-    pub fn size(&self) -> &Vector2<u32> {
+    pub fn size(&self) -> &Vector2<NonZeroU32> {
         &self.size
     }
 
     #[allow(dead_code)]
     pub fn pos_to_index(&self, buffer_pos: Vector2<u32>) -> u32 {
-        buffer_pos.y * self.size.x + buffer_pos.x
+        buffer_pos.y * self.size.x.get() + buffer_pos.x
     }
 
     #[allow(dead_code)]
     pub fn index_to_pos(&self, index: u32) -> Vector2<u32> {
-        let x = index % self.size.x;
-        let y = (index - x) / self.size.x;
+        let x = index % self.size.x.get();
+        let y = (index - x) / self.size.x.get();
 
         Vector2::new(x, y)
     }
@@ -154,7 +154,7 @@ impl Index<Vector2<u32>> for FrameBuffer {
     type Output = Color;
 
     fn index(&self, index: Vector2<u32>) -> &Self::Output {
-        assert!((index.x < self.size.x) && (index.y < self.size.y));
+        assert!((index.x < self.size.x.get()) && (index.y < self.size.y.get()));
 
         let index = self.pos_to_index(index) as usize;
         &self.data[index]
@@ -163,7 +163,7 @@ impl Index<Vector2<u32>> for FrameBuffer {
 
 impl IndexMut<Vector2<u32>> for FrameBuffer {
     fn index_mut(&mut self, index: Vector2<u32>) -> &mut Self::Output {
-        assert!((index.x < self.size.x) && (index.y < self.size.y));
+        assert!((index.x < self.size.x.get()) && (index.y < self.size.y.get()));
 
         let index = self.pos_to_index(index) as usize;
         &mut self.data[index]

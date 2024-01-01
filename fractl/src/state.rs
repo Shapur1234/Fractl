@@ -3,7 +3,7 @@ use std::num::NonZeroU32;
 use cgmath::Vector2;
 use lib::{Camera, ColorType, Draw, Fill, Float, Fractal, FractalType, FrameBuffer, Label};
 use winit::{
-    event::{ElementState, KeyEvent},
+    event::{ElementState, KeyEvent, MouseButton},
     keyboard::{KeyCode, PhysicalKey},
 };
 
@@ -68,7 +68,7 @@ impl State {
         if self.show_crosshair {
             const CROSSHAIR_SIZE: i64 = 5;
 
-            let center = (framebuffer.size() / 2).map(|x| x as i64);
+            let center = (framebuffer.size().map(|x| x.get()) / 2).map(|x| x as i64);
             for x in -CROSSHAIR_SIZE..=CROSSHAIR_SIZE {
                 for y in -CROSSHAIR_SIZE..=CROSSHAIR_SIZE {
                     let current_pixel = Vector2::new((center.x + x) as u32, (center.y + y) as u32);
@@ -203,15 +203,46 @@ impl State {
         }
     }
 
+    pub fn handle_mousewheel_input(&mut self, delta: Vector2<f32>) -> bool {
+        if delta.y.is_normal() {
+            self.change_zoom(delta.y.is_sign_positive());
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn handle_mouse_input(
+        &mut self,
+        button: MouseButton,
+        state: ElementState,
+        mouse_pos: Vector2<f64>,
+        screen_size: impl Into<Vector2<NonZeroU32>>,
+    ) -> bool {
+        if matches!(state, ElementState::Pressed) {
+            let screen_size = screen_size.into();
+
+            match button {
+                MouseButton::Left => {
+                    let world_pos = self
+                        .camera
+                        .screen_to_world_pos(&mouse_pos.map(|x| x as u32), &screen_size);
+                    self.camera.set_center_pos(world_pos);
+
+                    true
+                }
+                _ => false,
+            }
+        } else {
+            false
+        }
+    }
+
     pub fn handle_keyboard_input(&mut self, key_event: &KeyEvent) -> bool {
         self.handle_state_keyboard_input(key_event) || self.camera.handle_keyboard_input(key_event)
     }
 
-    pub fn zoom_to(&mut self, by: f64, mouse_pos: Vector2<f64>, screen_size: Vector2<NonZeroU32>) {
-        let mouse_world_pos = self
-            .camera
-            .screen_to_world_pos(&mouse_pos.map(|x| x as u32), &screen_size.map(|x| x.get()));
-
-        self.camera.zoom_to(by as Float, mouse_world_pos);
+    pub fn change_zoom(&mut self, increase: bool) {
+        self.camera.change_zoom(increase)
     }
 }

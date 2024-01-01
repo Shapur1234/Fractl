@@ -40,6 +40,13 @@ impl Camera {
     }
 
     #[allow(dead_code)]
+    pub fn set_center_pos(&mut self, new_center_pos: Vector2<Float>) {
+        if new_center_pos.x.is_normal() && new_center_pos.y.is_normal() {
+            self.center_pos = new_center_pos;
+        }
+    }
+
+    #[allow(dead_code)]
     pub fn view_size(&self) -> Vector2<Float> {
         self.view_size.zip(self.zoom, |x, y| x / y)
     }
@@ -51,7 +58,7 @@ impl Camera {
 
     #[allow(dead_code)]
     pub fn set_zoom(&mut self, new_zoom: Vector2<Float>) {
-        assert!(new_zoom.x.is_finite() && new_zoom.y.is_finite());
+        assert!(new_zoom.x.is_normal() && new_zoom.y.is_normal());
         self.zoom = new_zoom;
     }
 
@@ -114,18 +121,12 @@ impl Camera {
                         true
                     }
                     KeyCode::KeyO => {
-                        self.zoom.x += Camera::ZOOM_INCREMENT * self.zoom.x;
-                        self.zoom.y += Camera::ZOOM_INCREMENT * self.zoom.y;
-
-                        self.zoom = self.zoom.map(|x| x.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM));
+                        self.change_zoom(true);
 
                         true
                     }
                     KeyCode::KeyP => {
-                        self.zoom.x -= Camera::ZOOM_INCREMENT * self.zoom.x;
-                        self.zoom.y -= Camera::ZOOM_INCREMENT * self.zoom.y;
-
-                        self.zoom = self.zoom.map(|x| x.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM));
+                        self.change_zoom(false);
 
                         true
                     }
@@ -144,35 +145,20 @@ impl Camera {
         }
     }
 
-    pub fn zoom_to(&mut self, by: Float, world_pos: Vector2<Float>) {
-        let zoom_old = self.zoom;
+    pub fn change_zoom(&mut self, increase: bool) {
+        let new_zoom = self
+            .zoom
+            .map(|x| x + if increase { 1.0 } else { -1.0 } * Camera::ZOOM_INCREMENT * x)
+            .map(|x| x.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM));
 
-        self.zoom.x += Camera::ZOOM_INCREMENT * self.zoom.x * by;
-        self.zoom.y += Camera::ZOOM_INCREMENT * self.zoom.y * by;
-
-        self.zoom = self.zoom.map(|x| x.clamp(Camera::MIN_ZOOM, Camera::MAX_ZOOM));
-
-        let (world_pos_delta, zoom_delta) = (world_pos - self.center_pos, self.zoom - zoom_old);
-        let world_pos_delta_normed = world_pos_delta.map(|x| {
-            if x.is_sign_positive() {
-                x.sqrt()
-            } else {
-                -x.abs().sqrt()
-            }
-        });
-        if world_pos_delta_normed.x.is_normal()
-            && world_pos_delta_normed.y.is_normal()
-            && zoom_delta.x.is_normal()
-            && zoom_delta.y.is_normal()
-        {
-            self.center_pos += world_pos_delta_normed
-                .zip(zoom_delta, |x, y| x * y)
-                .zip(self.zoom, |x, y| x / y);
+        if new_zoom.x.is_normal() && new_zoom.y.is_normal() {
+            self.zoom = new_zoom;
         }
     }
 
-    pub fn screen_to_world_pos(&self, screen_pos: &Vector2<u32>, screen_size: &Vector2<u32>) -> Vector2<Float> {
-        let screen_pos_normalized = screen_pos.zip(*screen_size, |pos, size| (pos as Float / size as Float) - 0.5);
+    pub fn screen_to_world_pos(&self, screen_pos: &Vector2<u32>, screen_size: &Vector2<NonZeroU32>) -> Vector2<Float> {
+        let screen_pos_normalized =
+            screen_pos.zip(*screen_size, |pos, size| (pos as Float / size.get() as Float) - 0.5);
 
         Vector2::new(
             ((screen_pos_normalized.x * self.view_size.x) / self.zoom.x) + self.center_pos.x,
