@@ -256,13 +256,13 @@ impl Fill for Fractal {
                     use crate::{framebuffer::transform_vec, gpu::do_gpu_compute};
 
 
-                    let mut io_buffer = (0..buffer.size().x * buffer.size().y)
+                    let mut io_buffer = (0..buffer.size().x.get() * buffer.size().y.get())
                         .into_iter().collect::<Vec<_>>();
 
                     do_gpu_compute(
                         &mut io_buffer,
                         &self.camera,
-                        buffer.size().map(|x| NonZeroU32::new(x).unwrap()),
+                        *buffer.size(),
                         self.max_iterations,
                         self.fractal_type,
                         self.color_type
