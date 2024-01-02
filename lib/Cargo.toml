@@ -8,7 +8,7 @@ repository = "https://github.com/Shapur1234/Fractaller"
 
 [features]
 multithread = [ "dep:rayon" ]
-gpu = [ "dep:bytemuck", "dep:flume", "dep:pollster", "dep:wgpu" ]
+gpu = [ "bytemuck/derive", "dep:flume", "dep:pollster", "dep:wgpu" ]
 f32 = [ ]
 f64 = [ ]
 image = [ "dep:image" ]
@@ -22,7 +22,7 @@ lazy_static = "1.4"
 image = { version = "0.24", optional = true }
 winit = { version = "0.29", default_features = false, optional = true }
 rayon =  { version = "1.8", optional = true }
-bytemuck = { version = "1.14", optional = true }
+bytemuck = { version = "1.14", feautres = [ "derive" ], optional = true }
 flume = {version = "0.11", optional = true }
 pollster = { version =  "0.3", optional = true }
 wgpu = { version = "0.18", optional = true }

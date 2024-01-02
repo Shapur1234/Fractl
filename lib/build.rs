@@ -1,5 +1,5 @@
 fn main() {
-    if cfg!(all(feature = "gpu", target_os = "linux")) {
+    if cfg!(feature = "gpu") && cfg!(linux) {
         println!("cargo:rustc-link-lib=vulkan");
     }
 }

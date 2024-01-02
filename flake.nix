@@ -163,6 +163,53 @@
             wrapProgram "$out/bin/fractl-gpu" --set LD_LIBRARY_PATH ${LD_LIBRARY_PATH};
           '';
         });
+
+        singlethreadWinCrate = craneLib.buildPackage (singlethreadArgs // {
+          strictDeps = true;
+          doCheck = false;
+
+          CARGO_BUILD_TARGET = "x86_64-pc-windows-gnu";
+
+          depsBuildBuild = with pkgs; [
+            pkgsCross.mingwW64.stdenv.cc
+          ];
+          CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS =
+            "-L native=${pkgs.pkgsCross.mingwW64.windows.pthreads}/lib";
+        });
+        multithreadWinCrate = craneLib.buildPackage (multithreadArgs // {
+          strictDeps = true;
+          doCheck = false;
+
+          CARGO_BUILD_TARGET = "x86_64-pc-windows-gnu";
+
+          depsBuildBuild = with pkgs; [
+            pkgsCross.mingwW64.stdenv.cc
+          ];
+          CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS =
+            "-L native=${pkgs.pkgsCross.mingwW64.windows.pthreads}/lib";
+
+          postInstall = ''
+            mv $out/bin/fractl.exe $out/bin/fractl-multithread.exe
+          '';
+        });
+        gpuWinCrate = craneLib.buildPackage (gpuArgs // {
+          strictDeps = true;
+          doCheck = false;
+
+          CARGO_BUILD_TARGET = "x86_64-pc-windows-gnu";
+
+          depsBuildBuild = with pkgs; [
+            pkgsCross.mingwW64.stdenv.cc
+          ];
+          CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS =
+            "-L native=${pkgs.pkgsCross.mingwW64.windows.pthreads}/lib";
+
+
+          postInstall = ''
+            mv $out/bin/fractl.exe $out/bin/fractl-gpu.exe
+          '';
+        });
+
         wasmCrate = craneLib.buildTrunkPackage (wasmArgs // {
           cargoArtifacts = wasmCargoArtifacts;
         });
@@ -207,6 +254,9 @@
           fractl = singlethreadCrate;
           fractl-multithread = multithreadCrate;
           fractl-gpu = gpuCrate;
+          fractl-win = singlethreadWinCrate;
+          fractl-win-multithread = multithreadWinCrate;
+          fractl-win-gpu = gpuWinCrate;
           fractl-wasm = wasmCrate;
         };
 
