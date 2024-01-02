@@ -7,6 +7,9 @@
 
 ## Screenshots
 
+![Mandelbrot](/screenshot/mandelbrot.png)
+![Multibrot](/screenshot/multibrot.png)
+
 ### TODO
 
 - Add Julia set, more fractals
