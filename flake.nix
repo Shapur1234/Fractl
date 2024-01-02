@@ -65,11 +65,9 @@
           wayland-protocols
 
           libxkbcommon
-
           xorg.libX11
           xorg.libXcursor
           xorg.libXi
-          xorg.libXrandr
         ];
         LD_LIBRARY_PATH = lib.makeLibraryPath runtimeLibs;
 
@@ -86,8 +84,21 @@
           ];
         };
 
-        guiArgs = commonArgs // {
+        singlethreadArgs = commonArgs // {
           pname = "fractl";
+          cargoExtraArgs = ''--package=fractl --no-default-features --features "f64"'';
+
+          buildInputs = [
+            runtimeLibs
+          ];
+          nativeBuildInputs = with pkgs; [
+            makeWrapper
+          ];
+
+          inherit LD_LIBRARY_PATH;
+        };
+        multithreadArgs = commonArgs // {
+          pname = "fractl-multithread";
           cargoExtraArgs = ''--package=fractl --no-default-features --features "multithread f64"'';
 
           buildInputs = [
@@ -99,7 +110,7 @@
 
           inherit LD_LIBRARY_PATH;
         };
-        guiGpuArgs = commonArgs // {
+        gpuArgs = commonArgs // {
           pname = "fractl-gpu";
           cargoExtraArgs = ''--package=fractl --no-default-features --features "gpu f32"'';
 
@@ -125,21 +136,29 @@
           };
         };
 
-        guiCargoArtifacts = craneLib.buildDepsOnly guiArgs;
-        guiGpuCargoArtifacts = craneLib.buildDepsOnly guiGpuArgs;
+        singlethreadCargoArtifacts = craneLib.buildDepsOnly singlethreadArgs;
+        multithreadCargoArtifacts = craneLib.buildDepsOnly multithreadArgs;
+        gpuCargoArtifacts = craneLib.buildDepsOnly gpuArgs;
         wasmCargoArtifacts = craneLib.buildDepsOnly (wasmArgs // {
           doCheck = false;
         });
 
-        guiCrate = craneLib.buildPackage (guiArgs // {
-          cargoArtifacts = guiCargoArtifacts;
+        singlethreadCrate = craneLib.buildPackage (singlethreadArgs // {
+          cargoArtifacts = singlethreadCargoArtifacts;
 
           postInstall = ''
             wrapProgram "$out/bin/fractl" --set LD_LIBRARY_PATH ${LD_LIBRARY_PATH};
           '';
         });
-        guiGpuCrate = craneLib.buildPackage (guiGpuArgs // {
-          cargoArtifacts = guiGpuCargoArtifacts;
+        multithreadCrate = craneLib.buildPackage (multithreadArgs // {
+          cargoArtifacts = multithreadCargoArtifacts;
+
+          postInstall = ''
+            wrapProgram "$out/bin/fractl" --set LD_LIBRARY_PATH ${LD_LIBRARY_PATH};
+          '';
+        });
+        gpuCrate = craneLib.buildPackage (gpuArgs // {
+          cargoArtifacts = gpuCargoArtifacts;
 
           postInstall = ''
             mv $out/bin/fractl $out/bin/fractl-gpu
@@ -154,38 +173,57 @@
           ${pkgs.python3Minimal}/bin/python3 -m http.server --directory ${wasmCrate} 8000
         '';
 
-        guiCrateClippy = craneLib.cargoClippy (guiArgs // {
+        signlethreadCrateClippy = craneLib.cargoClippy (singlethreadArgs // {
           inherit src;
-          cargoArtifacts = guiCargoArtifacts;
+          cargoArtifacts = singlethreadCargoArtifacts;
+
+          cargoClippyExtraArgs = "-- --deny warnings";
+        });
+        multithreadCrateClippy = craneLib.cargoClippy (multithreadArgs // {
+          inherit src;
+          cargoArtifacts = multithreadCargoArtifacts;
+
+          cargoClippyExtraArgs = "-- --deny warnings";
+        });
+        gpuCrateClippy = craneLib.cargoClippy (gpuArgs // {
+          inherit src;
+          cargoArtifacts = gpuCargoArtifacts;
 
           cargoClippyExtraArgs = "-- --deny warnings";
         });
       in
       {
         checks = {
-          inherit
-            guiCrate
-            guiGpuCrate
-            guiCrateClippy
-            wasmCrate;
+          inherit singlethreadCrate;
+          inherit gpuCrate;
+          inherit wasmCrate;
+
+          inherit signlethreadCrateClippy;
+          inherit multithreadCrateClippy;
+          inherit gpuCrateClippy;
 
           fmt = craneLib.cargoFmt commonArgs;
         };
 
         packages = {
-          fractl = guiCrate;
-          fractl-gpu = guiGpuCrate;
+          fractl = singlethreadCrate;
+          fractl-multithread = multithreadCrate;
+          fractl-gpu = gpuCrate;
           fractl-wasm = wasmCrate;
         };
 
         apps = {
           fractl = flake-utils.lib.mkApp {
             name = "fractl";
-            drv = guiCrate;
+            drv = singlethreadCrate;
+          };
+          fractl-multithread = flake-utils.lib.mkApp {
+            name = "fractl-multithread";
+            drv = multithreadCrate;
           };
           fractl-gpu = flake-utils.lib.mkApp {
             name = "fractl-gpu";
-            drv = guiGpuCrate;
+            drv = gpuCrate;
           };
           fractl-wasm = flake-utils.lib.mkApp {
             name = "fractl-wasm";
