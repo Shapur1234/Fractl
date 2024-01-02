@@ -56,18 +56,15 @@
         };
 
         runtimeLibs = with pkgs; [
-          vulkan-headers
           vulkan-loader
-          vulkan-tools
-          vulkan-validation-layers
-
-          wayland
-          wayland-protocols
 
           libxkbcommon
           xorg.libX11
           xorg.libXcursor
           xorg.libXi
+
+          wayland
+          wayland-protocols
         ];
         LD_LIBRARY_PATH = lib.makeLibraryPath runtimeLibs;
 
@@ -154,7 +151,8 @@
           cargoArtifacts = multithreadCargoArtifacts;
 
           postInstall = ''
-            wrapProgram "$out/bin/fractl" --set LD_LIBRARY_PATH ${LD_LIBRARY_PATH};
+            mv $out/bin/fractl $out/bin/fractl-multithread
+            wrapProgram "$out/bin/fractl-multithread" --set LD_LIBRARY_PATH ${LD_LIBRARY_PATH};
           '';
         });
         gpuCrate = craneLib.buildPackage (gpuArgs // {
