@@ -15,7 +15,6 @@ use winit::{
 
 use crate::state::State;
 
-#[windows_subsystem(windows)]
 #[cfg(all(feature = "multithread", feature = "gpu"))]
 compile_error!("feature \"multithread\" and feature \"gpu\" cannot be enabled at the same time");
 
