@@ -10,7 +10,13 @@
 ![Mandelbrot](/screenshot/mandelbrot.png)
 ![Multibrot](/screenshot/multibrot.png)
 
-### TODO
+## How to
+
+### Installation
+
+### Controls
+
+## TODO
 
 - Add Julia set, more fractals
 - Wasm WebGpu with compute shader
