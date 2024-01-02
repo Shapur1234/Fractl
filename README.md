@@ -1,6 +1,7 @@
 # Fractl
 
-Fractal renderer
+- Fractal renderer written in rust supporting multithreading and the gpu
+- Supports both native targets and [wasm](https://en.wikipedia.org/wiki/WebAssembly)
 
 ### TODO
 
