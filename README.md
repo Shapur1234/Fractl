@@ -1,4 +1,4 @@
-# Fractaller
+# Fractl
 
 Fractal renderer
 
