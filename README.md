@@ -41,7 +41,8 @@
 
 ## TODO
 
+- Finish the readme :)
 - Add Julia set, more fractals
 - Wasm WebGpu with compute shader
-- Redox port
+- Redox portk
 - Publish to crates.io
