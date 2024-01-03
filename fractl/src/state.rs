@@ -151,18 +151,13 @@ impl State {
                         .unwrap_or(self.max_iterations);
                         true
                     }
-                    KeyCode::KeyN => {
-                        self.selected_fractal_type = self.selected_fractal_type.prev();
-
-                        true
-                    }
                     KeyCode::KeyM => {
                         self.selected_fractal_type = self.selected_fractal_type.next();
 
                         true
                     }
-                    KeyCode::KeyV => {
-                        self.selected_color_type = self.selected_color_type.prev();
+                    KeyCode::KeyN => {
+                        self.selected_fractal_type = self.selected_fractal_type.prev();
 
                         true
                     }
@@ -171,7 +166,12 @@ impl State {
 
                         true
                     }
-                    KeyCode::KeyC => {
+                    KeyCode::KeyV => {
+                        self.selected_color_type = self.selected_color_type.prev();
+
+                        true
+                    }
+                    KeyCode::KeyY => {
                         self.show_crosshair ^= true;
 
                         true
@@ -181,13 +181,13 @@ impl State {
 
                         true
                     }
-                    KeyCode::KeyZ => {
+                    KeyCode::KeyX => {
                         self.selected_fractal_type
                             .change_multi_parametr(-CHANGE_MULTIBROT_EXPONENT_STEP);
 
                         true
                     }
-                    KeyCode::KeyX => {
+                    KeyCode::KeyC => {
                         self.selected_fractal_type
                             .change_multi_parametr(CHANGE_MULTIBROT_EXPONENT_STEP);
 

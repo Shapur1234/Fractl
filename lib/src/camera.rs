@@ -130,8 +130,13 @@ impl Camera {
 
                         true
                     }
-                    KeyCode::KeyI => {
+                    KeyCode::KeyT => {
                         self.zoom = Vector2::new(1.0, 1.0);
+
+                        true
+                    }
+                    KeyCode::KeyR => {
+                        self.center_pos = Vector2::new(0.0, 0.0);
 
                         true
                     }

@@ -16,15 +16,32 @@
 
 ### Controls
 
-| Key             | Action                |
-| --------------- | --------------------- |
-| ScrollWheel     | Magnify / Zoom        |
-| LeftMouseButton | Center view on cursor |
-| F11             | Toggle Fullscreen     |
-| Escape          | Exit                  |
+| Key             | Action                                  |
+| --------------- | --------------------------------------- |
+| LeftMouseButton | Center view on cursor                   |
+| WSAD            | Move view                               |
+| R               | Reset view                              |
+| ScrollWheel     | Increase / Decrease zoom                |
+| O               | Increase zoom                           |
+| P               | Decrease zoom                           |
+| ArrowKey        | Increase / Decrease zoom in a direction |
+| T               | Reset zoom                              |
+| K               | Increase percision (max iterations)     |
+| L               | Decrease percision (max iterations)     |
+| M               | Next fractal                            |
+| N               | Previous fractal                        |
+| B               | Next fractal coloring                   |
+| V               | Previous fractal coloring               |
+| U               | Toggle UI                               |
+| Y               | Toggle crosshair                        |
+| C               | Increase exponent (for multi-fractals)  |
+| X               | Decrease exponent (for multi-fractals)  |
+| F11             | Toggle Fullscreen                       |
+| Escape          | Exit                                    |
 
 ## TODO
 
+- f128
 - Add Julia set, more fractals
 - Wasm WebGpu with compute shader
 - Redox port
