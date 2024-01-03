@@ -3,8 +3,9 @@ use std::{fmt::Display, num::NonZeroU32};
 use cfg_if::cfg_if;
 use cgmath::Vector2;
 
-use crate::{framebuffer::Color, Camera, Fill, Float};
+use crate::{float, framebuffer::Color, Camera, Fill, Float};
 
+#[non_exhaustive]
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum FractalType {
     #[default]
@@ -16,6 +17,7 @@ impl FractalType {
     const NUM_OF_VARIANTS: u8 = 2;
     const DEFAULT_MULTIBROT_ARGUEMENT: Float = 4.0;
 
+    #[must_use]
     pub const fn id(&self) -> u8 {
         match self {
             Self::Mandelbrot => 0,
@@ -23,6 +25,7 @@ impl FractalType {
         }
     }
 
+    #[must_use]
     pub const fn from_id(id: u8) -> Self {
         match id % Self::NUM_OF_VARIANTS {
             0 => Self::Mandelbrot,
@@ -31,10 +34,12 @@ impl FractalType {
         }
     }
 
+    #[must_use]
     pub const fn next(&self) -> Self {
         Self::from_id(self.id() + 1)
     }
 
+    #[must_use]
     pub const fn prev(&self) -> Self {
         Self::from_id(self.id() + Self::NUM_OF_VARIANTS - 1)
     }
@@ -43,11 +48,12 @@ impl FractalType {
         if let Self::Multibrot(exponent) = self {
             let new_exponent = *exponent + by;
             if new_exponent.is_finite() {
-                *self = FractalType::Multibrot(new_exponent)
+                *self = FractalType::Multibrot(new_exponent);
             }
         }
     }
 
+    #[must_use]
     pub fn multi_parametr(&self) -> Option<Float> {
         match self {
             Self::Multibrot(exponent) => Some(*exponent),
@@ -55,6 +61,7 @@ impl FractalType {
         }
     }
 
+    #[must_use]
     pub fn escape_time(&self, world_pos: Vector2<Float>, max_iterations: NonZeroU32) -> u32 {
         let mut n = 0;
         let max_iterations = max_iterations.get();
@@ -112,13 +119,14 @@ impl Display for FractalType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             FractalType::Mandelbrot => write!(f, "Mandelbrot"),
-            FractalType::Multibrot(exponent) => write!(f, "Multibrot ({:?})", exponent),
+            FractalType::Multibrot(exponent) => write!(f, "Multibrot ({exponent:?})"),
         }?;
 
         Ok(())
     }
 }
 
+#[non_exhaustive]
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum ColorType {
     #[default]
@@ -130,6 +138,7 @@ pub enum ColorType {
 impl ColorType {
     const NUM_OF_VARIANTS: u8 = 3;
 
+    #[must_use]
     pub const fn id(&self) -> u8 {
         match self {
             Self::Histogram => 0,
@@ -138,6 +147,7 @@ impl ColorType {
         }
     }
 
+    #[must_use]
     pub const fn from_id(id: u8) -> Self {
         match id % Self::NUM_OF_VARIANTS {
             0 => Self::Histogram,
@@ -147,25 +157,26 @@ impl ColorType {
         }
     }
 
+    #[must_use]
     pub const fn next(&self) -> Self {
         Self::from_id(self.id() + 1)
     }
 
+    #[must_use]
     pub const fn prev(&self) -> Self {
         Self::from_id(self.id() + Self::NUM_OF_VARIANTS - 1)
     }
 
+    #[must_use]
     pub fn escape_time_color(&self, escape_time: u32, max_iterations: NonZeroU32) -> Color {
         let max_iterations = max_iterations.get();
+
+        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
         match self {
             Self::Histogram => {
                 // https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#Histogram_coloring
 
-                Color::new(
-                    0,
-                    0,
-                    (((escape_time as Float) / (max_iterations as Float)) * 255.0) as u8,
-                )
+                Color::new(0, 0, ((float(escape_time) / float(max_iterations)) * 255.0) as u8)
             }
             Self::LCH => {
                 // https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set#LCH_coloring
@@ -178,7 +189,7 @@ impl ColorType {
                     }
                 }
 
-                let s = (escape_time as Float) / (max_iterations as Float);
+                let s = float(escape_time) / float(max_iterations);
                 let v = 1.0 - (PI * s).cos().powi(2);
 
                 Color::new(
@@ -190,7 +201,7 @@ impl ColorType {
             Self::OLC => {
                 // https://github.com/OneLoneCoder/Javidx9/blob/54b26051d0fd1491c325ae09f50a7fc3f25030e8/PixelGameEngine/SmallerProjects/OneLoneCoder_PGE_Mandelbrot.cpp#L543C3-L543C3
 
-                let n = escape_time as Float;
+                let n = float(escape_time);
                 let a = 0.1;
 
                 Color::new(
@@ -224,6 +235,7 @@ pub struct Fractal {
 }
 
 impl Fractal {
+    #[must_use]
     pub fn new(kind: FractalType, color_type: ColorType, camera: Camera, max_iterations: NonZeroU32) -> Self {
         Self {
             fractal_type: kind,
@@ -257,7 +269,7 @@ impl Fill for Fractal {
 
 
                     let mut io_buffer = (0..buffer.size().x.get() * buffer.size().y.get())
-                        .into_iter().collect::<Vec<_>>();
+                        .collect::<Vec<_>>();
 
                     do_gpu_compute(
                         &mut io_buffer,

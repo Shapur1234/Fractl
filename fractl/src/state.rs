@@ -1,7 +1,7 @@
 use std::num::NonZeroU32;
 
 use cgmath::Vector2;
-use lib::{Camera, ColorType, Draw, Fill, Float, Fractal, FractalType, FrameBuffer, Label};
+use lib::{float, Camera, ColorType, Draw, Fill, Float, Fractal, FractalType, FrameBuffer, Label};
 use winit::{
     event::{ElementState, KeyEvent, MouseButton},
     keyboard::{KeyCode, PhysicalKey},
@@ -68,9 +68,10 @@ impl State {
         if self.show_crosshair {
             const CROSSHAIR_SIZE: i64 = 5;
 
-            let center = (framebuffer.size().map(|x| x.get()) / 2).map(|x| x as i64);
+            let center = (framebuffer.size().map(std::num::NonZeroU32::get) / 2).map(i64::from);
             for x in -CROSSHAIR_SIZE..=CROSSHAIR_SIZE {
                 for y in -CROSSHAIR_SIZE..=CROSSHAIR_SIZE {
+                    #[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
                     let current_pixel = Vector2::new((center.x + x) as u32, (center.y + y) as u32);
 
                     if x == 0 || y == 0 {
@@ -82,14 +83,19 @@ impl State {
 
         if self.show_ui {
             let (start_y, line_offset) = (40, 40);
-            Label::new("Fractaller", 40.0, None).draw(Vector2::new(10, start_y + line_offset / 2), &mut framebuffer);
+            Label::new("Fractaller", 40.0, None)
+                .unwrap()
+                .draw(Vector2::new(10, start_y + line_offset / 2), &mut framebuffer);
 
             Label::new(format!("Selected fractal: {:}", self.selected_fractal_type), 25.0, None)
+                .unwrap()
                 .draw(Vector2::new(10, start_y + line_offset * 2), &mut framebuffer);
             Label::new(format!("Selected coloring: {:}", self.selected_color_type), 25.0, None)
+                .unwrap()
                 .draw(Vector2::new(10, start_y + line_offset * 3), &mut framebuffer);
 
             Label::new(format!("Max iterations: {:}", self.max_iterations), 25.0, None)
+                .unwrap()
                 .draw(Vector2::new(10, start_y + line_offset * 4), &mut framebuffer);
 
             Label::new(
@@ -97,6 +103,7 @@ impl State {
                 25.0,
                 None,
             )
+            .unwrap()
             .draw(Vector2::new(10, start_y + line_offset * 5), &mut framebuffer);
 
             Label::new(
@@ -108,6 +115,7 @@ impl State {
                 25.0,
                 None,
             )
+            .unwrap()
             .draw(Vector2::new(10, start_y + line_offset * 6), &mut framebuffer);
 
             Label::new(
@@ -119,6 +127,7 @@ impl State {
                 25.0,
                 None,
             )
+            .unwrap()
             .draw(Vector2::new(10, start_y + line_offset * 7), &mut framebuffer);
         }
 
@@ -134,7 +143,8 @@ impl State {
                 match key_code {
                     KeyCode::KeyK => {
                         self.max_iterations = NonZeroU32::new(
-                            ((((self.max_iterations.get() as Float) * CHANGE_MAX_ITERATIONS_MULT).ceil()) as i64)
+                            #[allow(clippy::cast_possible_truncation)]
+                            (((float(self.max_iterations.get()) * CHANGE_MAX_ITERATIONS_MULT).ceil()) as i64)
                                 .try_into()
                                 .unwrap_or_default(),
                         )
@@ -144,7 +154,8 @@ impl State {
                     }
                     KeyCode::KeyL => {
                         self.max_iterations = NonZeroU32::new(
-                            ((((self.max_iterations.get() as Float) / CHANGE_MAX_ITERATIONS_MULT).ceil()) as i64)
+                            #[allow(clippy::cast_possible_truncation)]
+                            (((float(self.max_iterations.get()) / CHANGE_MAX_ITERATIONS_MULT).ceil()) as i64)
                                 .try_into()
                                 .unwrap_or_default(),
                         )
@@ -224,6 +235,7 @@ impl State {
 
             match button {
                 MouseButton::Left => {
+                    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
                     let world_pos = self
                         .camera
                         .screen_to_world_pos(&mouse_pos.map(|x| x as u32), &screen_size);
@@ -243,6 +255,6 @@ impl State {
     }
 
     pub fn change_zoom(&mut self, increase: bool) {
-        self.camera.change_zoom(increase)
+        self.camera.change_zoom(increase);
     }
 }

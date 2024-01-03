@@ -16,21 +16,26 @@ lazy_static! {
 }
 
 impl Label {
-    pub fn new(text: impl ToString, fontsize: f32, color: Option<Color>) -> Self {
+    #[allow(clippy::missing_errors_doc, clippy::needless_pass_by_value)]
+    pub fn new(text: impl ToString, fontsize: f32, color: Option<Color>) -> Result<Self, &'static str> {
         let text = text.to_string();
 
-        assert!(fontsize.is_finite() && fontsize > 0.0);
-        assert!(!text.is_empty());
-
-        Self {
-            text,
-            color: color.unwrap_or_default(),
-            fontsize,
+        if !(fontsize.is_normal() && fontsize.is_sign_positive()) {
+            Err("size must be normal and positive")
+        } else if text.is_empty() {
+            Err("text cannot be empty string")
+        } else {
+            Ok(Self {
+                text,
+                color: color.unwrap_or_default(),
+                fontsize,
+            })
         }
     }
 }
 
 impl Draw for Label {
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     fn draw(&self, pos: Vector2<u32>, buffer: &mut FrameBuffer) {
         const SPACE_BETWEEN_CHARS_MULT: f32 = 10.0;
         const SIZE_OF_SPACE_MULT: f32 = 2.0;
@@ -45,7 +50,7 @@ impl Draw for Label {
 
                     (
                         Vector2::new(metrics.width as u32, metrics.height as u32),
-                        metrics.ymin as i64,
+                        i64::from(metrics.ymin),
                         bitmap,
                     )
                 };
@@ -54,7 +59,7 @@ impl Draw for Label {
                     for y in 0..glyph_size.y {
                         let glyph_pos = Vector2::new(x, y);
                         let in_buffer_pos = Vector2::new(pos.x + glyph_pos.x + x_offset, {
-                            let res = ((pos.y + glyph_pos.y) as i64) - (glyph_size.y as i64) - ymin;
+                            let res = i64::from(pos.y + glyph_pos.y) - i64::from(glyph_size.y) - ymin;
                             if let Ok(val) = res.try_into() {
                                 val
                             } else {
@@ -64,11 +69,11 @@ impl Draw for Label {
 
                         if (in_buffer_pos.x < buffer.size().x.get()) && (in_buffer_pos.y < buffer.size().y.get()) {
                             let glyph_intensity =
-                                (glyph_bitmap[(glyph_pos.y * glyph_size.x + glyph_pos.x) as usize] as f32) / 255.0;
+                                f32::from(glyph_bitmap[(glyph_pos.y * glyph_size.x + glyph_pos.x) as usize]) / 255.0;
 
                             if glyph_intensity > 0.0 {
-                                buffer[in_buffer_pos] = self.color.scale(glyph_intensity)
-                                    + buffer[in_buffer_pos].scale(1.0 - glyph_intensity);
+                                buffer[in_buffer_pos] = self.color.scale(glyph_intensity).unwrap()
+                                    + buffer[in_buffer_pos].scale(1.0 - glyph_intensity).unwrap();
                             }
                         }
                     }

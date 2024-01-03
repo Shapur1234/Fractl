@@ -7,7 +7,7 @@ use winit::{
     keyboard::{KeyCode, PhysicalKey},
 };
 
-use crate::Float;
+use crate::{float, Float};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Camera {
@@ -17,15 +17,12 @@ pub struct Camera {
 }
 
 impl Camera {
-    #[allow(dead_code)]
     const MOVE_INCREMENT: Float = 0.005;
-    #[allow(dead_code)]
     const ZOOM_INCREMENT: Float = 0.02;
-    #[allow(dead_code)]
     const MIN_ZOOM: Float = 0.1;
-    #[allow(dead_code)]
     const MAX_ZOOM: Float = Float::MAX;
 
+    #[must_use]
     pub fn new(screen_size: impl Into<Vector2<NonZeroU32>>) -> Self {
         Self {
             center_pos: Vector2::new(0.0, 0.0),
@@ -34,29 +31,28 @@ impl Camera {
         }
     }
 
-    #[allow(dead_code)]
+    #[must_use]
     pub fn center_pos(&self) -> Vector2<Float> {
         self.center_pos
     }
 
-    #[allow(dead_code)]
     pub fn set_center_pos(&mut self, new_center_pos: Vector2<Float>) {
         if new_center_pos.x.is_normal() && new_center_pos.y.is_normal() {
             self.center_pos = new_center_pos;
         }
     }
 
-    #[allow(dead_code)]
+    #[must_use]
     pub fn view_size(&self) -> Vector2<Float> {
         self.view_size.zip(self.zoom, |x, y| x / y)
     }
 
-    #[allow(dead_code)]
+    #[must_use]
     pub fn zoom(&self) -> Vector2<Float> {
         self.zoom
     }
 
-    #[allow(dead_code)]
+    #[allow(clippy::missing_panics_doc)]
     pub fn set_zoom(&mut self, new_zoom: Vector2<Float>) {
         assert!(new_zoom.x.is_normal() && new_zoom.y.is_normal());
         self.zoom = new_zoom;
@@ -67,7 +63,7 @@ impl Camera {
     }
 
     fn calc_ratio(new_screen_size: impl Into<Vector2<NonZeroU32>>) -> Float {
-        let new_screen_size = new_screen_size.into().map(|x| x.get() as Float);
+        let new_screen_size = new_screen_size.into().map(|x| float(x.get()));
         new_screen_size.x / new_screen_size.y
     }
 
@@ -161,9 +157,9 @@ impl Camera {
         }
     }
 
+    #[must_use]
     pub fn screen_to_world_pos(&self, screen_pos: &Vector2<u32>, screen_size: &Vector2<NonZeroU32>) -> Vector2<Float> {
-        let screen_pos_normalized =
-            screen_pos.zip(*screen_size, |pos, size| (pos as Float / size.get() as Float) - 0.5);
+        let screen_pos_normalized = screen_pos.zip(*screen_size, |pos, size| (float(pos) / float(size.get())) - 0.5);
 
         Vector2::new(
             ((screen_pos_normalized.x * self.view_size.x) / self.zoom.x) + self.center_pos.x,

@@ -1,3 +1,6 @@
+#![warn(clippy::pedantic)]
+#![allow(clippy::too_many_lines)]
+
 mod camera;
 mod framebuffer;
 #[cfg(feature = "gpu")]
@@ -29,5 +32,17 @@ cfg_if! {
         pub type Float = f32;
     } else if #[cfg(feature = "f64")] {
         pub type Float = f64;
+    }
+}
+
+#[must_use]
+#[allow(clippy::cast_lossless, clippy::cast_precision_loss)]
+pub fn float(n: u32) -> Float {
+    cfg_if! {
+        if #[cfg(feature = "f32")] {
+            n as f32
+        } else if #[cfg(feature = "f64")] {
+            n as f64
+        }
     }
 }

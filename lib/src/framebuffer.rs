@@ -12,43 +12,46 @@ use image::{Rgb, RgbImage};
 pub struct Color(u32);
 
 impl Color {
-    #[allow(dead_code)]
     pub const WHITE: Self = Self::new(255, 255, 255);
-    #[allow(dead_code)]
     pub const BLACK: Self = Self::new(0, 0, 0);
-    #[allow(dead_code)]
     pub const RED: Self = Self::new(255, 0, 0);
-    #[allow(dead_code)]
     pub const GREEN: Self = Self::new(0, 255, 0);
-    #[allow(dead_code)]
     pub const BLUE: Self = Self::new(0, 0, 255);
 
+    #[must_use]
     pub const fn new(red: u8, green: u8, blue: u8) -> Self {
         Self((blue as u32) | ((green as u32) << 8) | ((red as u32) << 16))
     }
 
+    #[must_use]
     pub const fn red(&self) -> u8 {
-        ((self.0 & 0xFF0000) >> 16) as u8
+        ((self.0 & 0xFF_00_00) >> 16) as u8
     }
 
+    #[must_use]
     pub const fn green(&self) -> u8 {
-        ((self.0 & 0xFF00) >> 8) as u8
+        ((self.0 & 0x00_FF_00) >> 8) as u8
     }
 
+    #[must_use]
     pub const fn blue(&self) -> u8 {
-        (self.0 & 0xFF) as u8
+        (self.0 & 0x00_00_FF) as u8
     }
 
-    pub fn scale(&self, times: f32) -> Self {
-        assert!(times.is_finite() && (0.0..=1.0).contains(&times));
-
-        Self::new(
-            (self.red() as f32 * times) as u8,
-            (self.green() as f32 * times) as u8,
-            (self.blue() as f32 * times) as u8,
-        )
+    #[allow(clippy::missing_errors_doc, clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    pub fn scale(&self, times: f32) -> Result<Self, &'static str> {
+        if times.is_finite() && (0.0..=1.0).contains(&times) {
+            Ok(Self::new(
+                (f32::from(self.red()) * times) as u8,
+                (f32::from(self.green()) * times) as u8,
+                (f32::from(self.blue()) * times) as u8,
+            ))
+        } else {
+            Err("times must be a normal f32 between 0 and 1.0 (inclusive)")
+        }
     }
 
+    #[must_use]
     pub const fn invert(&self) -> Self {
         Self::new(255 - self.red(), 255 - self.green(), 255 - self.blue())
     }
@@ -114,6 +117,7 @@ impl FrameBuffer {
         };
     }
 
+    #[must_use]
     pub fn raw(self) -> Vec<u32> {
         unsafe { transform_vec::<Color, u32>(self.data) }
     }
@@ -132,16 +136,17 @@ impl FrameBuffer {
         img
     }
 
+    #[must_use]
     pub fn size(&self) -> &Vector2<NonZeroU32> {
         &self.size
     }
 
-    #[allow(dead_code)]
+    #[must_use]
     pub fn pos_to_index(&self, buffer_pos: Vector2<u32>) -> u32 {
         buffer_pos.y * self.size.x.get() + buffer_pos.x
     }
 
-    #[allow(dead_code)]
+    #[must_use]
     pub fn index_to_pos(&self, index: u32) -> Vector2<u32> {
         let x = index % self.size.x.get();
         let y = (index - x) / self.size.x.get();

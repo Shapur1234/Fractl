@@ -1,3 +1,6 @@
+#![warn(clippy::pedantic)]
+#![allow(clippy::too_many_lines)]
+
 mod state;
 #[cfg(target_arch = "wasm32")]
 mod wasm;
@@ -121,14 +124,14 @@ fn main() {
                                 ..
                             } => {
                                 if window.fullscreen().is_none() {
-                                    window.set_fullscreen(Some(Fullscreen::Borderless(None)))
+                                    window.set_fullscreen(Some(Fullscreen::Borderless(None)));
                                 } else {
-                                    window.set_fullscreen(None)
+                                    window.set_fullscreen(None);
                                 }
                             }
                             WindowEvent::KeyboardInput { event: key_event, .. } => {
                                 if state.handle_keyboard_input(&key_event) {
-                                    window.request_redraw()
+                                    window.request_redraw();
                                 }
                             }
                             WindowEvent::CursorMoved { position, .. } => {
@@ -140,7 +143,7 @@ fn main() {
                                 ..
                             } => {
                                 if state.handle_mousewheel_input(Vector2::new(x, y)) {
-                                    window.request_redraw()
+                                    window.request_redraw();
                                 }
                             }
                             WindowEvent::MouseInput {
@@ -149,7 +152,7 @@ fn main() {
                                 ..
                             } => {
                                 if state.handle_mouse_input(button, element_state, mouse_pos, screen_size) {
-                                    window.request_redraw()
+                                    window.request_redraw();
                                 }
                             }
                             _ => {}
