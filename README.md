@@ -41,7 +41,6 @@
 
 ## TODO
 
-- f128
 - Add Julia set, more fractals
 - Wasm WebGpu with compute shader
 - Redox port
