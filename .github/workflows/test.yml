@@ -6,9 +6,15 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: cachix/install-nix-action@v22
-      with:
-        github_access_token: ${{ secrets.GITHUB_TOKEN }}
-    - run: nix flake check
-    - run: nix build .#fractl
+      - uses: actions/checkout@v3
+      - uses: cachix/install-nix-action@v22
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - run: nix flake check
+      - run: nix build .#gui
+      - run: nix build .#gui-multithread
+      - run: nix build .#gui-gpu
+      - run: nix build .#gui-win
+      - run: nix build .#gui-win-multithread
+      - run: nix build .#gui-win-gpu
+      - run: nix build .#gui-wasm
