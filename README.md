@@ -14,16 +14,22 @@
 
 - Download a binary from releases (TODO)
 - Install using cargo (TODO)
-- Pick on of the packages:
-
-| Name | Description |
-| ---- | ----------- |
-| fractl | Base version without pararelism and double float percision |
 
 ### Building using nix
 
 - (This should be the most reliable way)
 - Have [nix](https://nixos.org/) [installed](https://nix.dev/install-nix.html) on your system
+- Pick on of the packages:
+
+| Name                   | Description                               | Pararelism         | Floatin point percision |
+| ---------------------- | ----------------------------------------- | ------------------ | ----------------------- |
+| fractl                 | Native gui                                | No                 | Double (f64)            |
+| fractl-multithread     | Native gui                                | CPU multithreading | Double (f64)            |
+| fractl-gpu             | Native gui                                | GPU compute shader | Single (f32)            |
+| fractl-wasm            | Web gui                                   | No                 | Double (f64)            |
+| fractl-win             | Native gui crosscompiled to Winows x86_64 | No                 | Double (f64)            |
+| fractl-win-multithread | Native gui crosscompiled to Winows x86_64 | CPU multithreading | Double (f64)            |
+| fractl-win-gpu         | Native gui crosscompiled to Winows x86_64 | GPU compute shader | Single (f32)            |
 
 ### Building using cargo
 
