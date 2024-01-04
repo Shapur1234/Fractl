@@ -19,9 +19,9 @@
 
 - (This should be the most reliable way)
 - Have [nix](https://nixos.org/) [installed](https://nix.dev/install-nix.html) on your system
-- Pick on of the packages:
+- Pick a package
 
-| Name                | Description                               | Pararelism         | Floatin point percision |
+| Package             | Description                               | Pararelism         | Floatin point percision |
 | ------------------- | ----------------------------------------- | ------------------ | ----------------------- |
 | gui                 | Native gui                                | No                 | Double (f64)            |
 | gui-multithread     | Native gui                                | CPU multithreading | Double (f64)            |
@@ -30,6 +30,10 @@
 | gui-win             | Native gui crosscompiled to Winows x86_64 | No                 | Double (f64)            |
 | gui-win-multithread | Native gui crosscompiled to Winows x86_64 | CPU multithreading | Double (f64)            |
 | gui-win-gpu         | Native gui crosscompiled to Winows x86_64 | GPU compute shader | Single (f32)            |
+
+To build: `nix build .#Package`
+
+To run locally: `nix build .#Package`
 
 ### Building using cargo
 
