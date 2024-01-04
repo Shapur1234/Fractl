@@ -15,28 +15,6 @@
 - Download a binary from releases (TODO)
 - Install using cargo (TODO)
 
-### Building using nix
-
-- (This should be the most reliable way)
-- Have [nix](https://nixos.org/) [installed](https://nix.dev/install-nix.html) on your system
-- Pick a package
-
-| Package             | Description                               | Pararelism         | Floatin point percision |
-| ------------------- | ----------------------------------------- | ------------------ | ----------------------- |
-| gui                 | Native gui                                | No                 | Double (f64)            |
-| gui-multithread     | Native gui                                | CPU multithreading | Double (f64)            |
-| gui-gpu             | Native gui                                | GPU compute shader | Single (f32)            |
-| gui-wasm            | Web gui                                   | No                 | Double (f64)            |
-| gui-win             | Native gui crosscompiled to Winows x86_64 | No                 | Double (f64)            |
-| gui-win-multithread | Native gui crosscompiled to Winows x86_64 | CPU multithreading | Double (f64)            |
-| gui-win-gpu         | Native gui crosscompiled to Winows x86_64 | GPU compute shader | Single (f32)            |
-
-To build: `nix build .#Package`
-
-To run locally: `nix build .#Package`
-
-### Building using cargo
-
 ### Controls
 
 | Key             | Action                                  |
@@ -62,9 +40,44 @@ To run locally: `nix build .#Package`
 | F11             | Toggle Fullscreen                       |
 | Escape          | Exit                                    |
 
+### Building using nix
+
+- (This should be the most reliable way)
+- Have [nix](https://nixos.org/) [installed](https://nix.dev/install-nix.html) on your system
+- Pick a package
+
+| Package             | Description                               | Pararelism         | Floatin point percision |
+| ------------------- | ----------------------------------------- | ------------------ | ----------------------- |
+| gui                 | Native gui                                | No                 | Double (f64)            |
+| gui-multithread     | Native gui                                | CPU multithreading | Double (f64)            |
+| gui-gpu             | Native gui                                | GPU compute shader | Single (f32)            |
+| gui-wasm            | Web gui                                   | No                 | Double (f64)            |
+| gui-win             | Native gui crosscompiled to Winows x86_64 | No                 | Double (f64)            |
+| gui-win-multithread | Native gui crosscompiled to Winows x86_64 | CPU multithreading | Double (f64)            |
+| gui-win-gpu         | Native gui crosscompiled to Winows x86_64 | GPU compute shader | Single (f32)            |
+
+To build: `nix build .#Package`
+To run locally: `nix run .#Package`
+Example: `nix run .#gui-gpu`
+
+### Building using cargo
+
+- Have [rust](https://www.rust-lang.org/tools/install) installed, or optionally use the included dev shelle: `nix develop`
+- Pick feautres
+
+| Feature      | Description                             | Notes                                                                       |
+| ------------ | --------------------------------------- | --------------------------------------------------------------------------- |
+| _multithred_ | CPU multithreading                      | _multithread_ and _gpu_ cannot be enabled at the same time                  |
+| _gpu_        | GPU computing                           | _multithread_ and _gpu_, _gpu_ and _f64_ cannot be enabled at the same time |
+| _f32_        | Single percision floating point numbers | _f32_ and _f64_ cannot be enabled at the same time                          |
+| _f64_        | Double percision floating point numbers | _f32_ and _f64_ cannot be enabled at the same time                          |
+
+To build: `cargo build --package=gui --no-default-features --release --features "Feature1 Feature2"`
+To run: `cargo run --package=gui --no-default-features --release --features "Feature1 Feature2"`
+Example: `cargo build --package=gui --no-default-features --release --features "gpu f32"`
+
 ## TODO
 
-- Finish the readme :)
 - Add Julia set, more fractals
 - Wasm WebGpu with compute shader
 - Redox portk
