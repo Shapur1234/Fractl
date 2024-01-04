@@ -14,6 +14,11 @@
 
 - Download a binary from releases (TODO)
 - Install using cargo (TODO)
+- Pick on of the packages:
+
+| Name | Description |
+| ---- | ----------- |
+| fractl | Base version without pararelism and double float percision |
 
 ### Building using nix
 
