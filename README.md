@@ -56,25 +56,25 @@
 | gui-win-multithread | Native gui crosscompiled to Winows x86_64 | CPU multithreading | Double (f64)            |
 | gui-win-gpu         | Native gui crosscompiled to Winows x86_64 | GPU compute shader | Single (f32)            |
 
-To build: `nix build .#Package`
-To run locally: `nix run .#Package`
-Example: `nix run .#gui-gpu`
+- To build: `nix build .#Package`
+- To build and run locally: `nix run .#Package`
+- Example: `nix run .#gui-gpu`
 
 ### Building using cargo
 
 - Have [rust](https://www.rust-lang.org/tools/install) installed, or optionally use the included dev shelle: `nix develop`
 - Pick feautres
 
-| Feature      | Description                             | Notes                                                                       |
-| ------------ | --------------------------------------- | --------------------------------------------------------------------------- |
-| _multithred_ | CPU multithreading                      | _multithread_ and _gpu_ cannot be enabled at the same time                  |
-| _gpu_        | GPU computing                           | _multithread_ and _gpu_, _gpu_ and _f64_ cannot be enabled at the same time |
-| _f32_        | Single percision floating point numbers | _f32_ and _f64_ cannot be enabled at the same time                          |
-| _f64_        | Double percision floating point numbers | _f32_ and _f64_ cannot be enabled at the same time                          |
+| Feature    | Description                             | Notes                                                                       |
+| ---------- | --------------------------------------- | --------------------------------------------------------------------------- |
+| multithred | CPU multithreading                      | _multithread_ and _gpu_ cannot be enabled at the same time                  |
+| gpu        | GPU computing                           | _multithread_ and _gpu_, _gpu_ and _f64_ cannot be enabled at the same time |
+| f32        | Single percision floating point numbers | _f32_ and _f64_ cannot be enabled at the same time                          |
+| f64        | Double percision floating point numbers | _f32_ and _f64_ cannot be enabled at the same time                          |
 
-To build: `cargo build --package=gui --no-default-features --release --features "Feature1 Feature2"`
-To run: `cargo run --package=gui --no-default-features --release --features "Feature1 Feature2"`
-Example: `cargo build --package=gui --no-default-features --release --features "gpu f32"`
+- To build: `cargo build --package=gui --no-default-features --release --features "Feature1 Feature2"`
+- To run: `cargo run --package=gui --no-default-features --release --features "Feature1 Feature2"`
+- Example: `cargo build --package=gui --no-default-features --release --features "gpu f32"`
 
 ## TODO
 
