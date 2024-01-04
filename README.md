@@ -12,7 +12,15 @@
 
 ## How to
 
-### Installation
+- Download a binary from releases (TODO)
+- Install using cargo (TODO)
+
+### Building using nix
+
+- (This should be the most reliable way)
+- Have [nix](https://nixos.org/) [installed](https://nix.dev/install-nix.html) on your system
+
+### Building using cargo
 
 ### Controls
 
