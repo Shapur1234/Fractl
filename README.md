@@ -80,5 +80,5 @@
 
 - Add Julia set, more fractals
 - Wasm WebGpu with compute shader
-- Redox portk
+- Redox port
 - Publish to crates.io
