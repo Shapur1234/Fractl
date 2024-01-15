@@ -4,4 +4,4 @@ rm -rf ./docs
 mkdir ./docs
 
 nix build .#gui-wasm
-cp -a ./result/. ./docs/
+cp -a ./result/. ./docs/ --no-preserve=mode,ownership

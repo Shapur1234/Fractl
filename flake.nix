@@ -204,7 +204,6 @@
           CARGO_TARGET_X86_64_PC_WINDOWS_GNU_RUSTFLAGS =
             "-L native=${pkgs.pkgsCross.mingwW64.windows.pthreads}/lib";
 
-
           postInstall = ''
             mv $out/bin/gui.exe $out/bin/gui-gpu.exe
           '';
