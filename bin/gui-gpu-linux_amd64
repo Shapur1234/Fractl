@@ -1,0 +1,3 @@
+#! /nix/store/q8qq40xg2grfh9ry1d9x4g7lq4ra7n81-bash-5.2-p21/bin/bash -e
+export LD_LIBRARY_PATH='/nix/store/6qv19a2pw8rbp77b3lwasj2i168km4gc-vulkan-loader-1.3.268.0/lib:/nix/store/6az669c4m6mv87br2716hcr7vvxw8w2d-libxkbcommon-1.5.0/lib:/nix/store/y8f8j7nb52l30cg8x0clk9k91fpi224v-libX11-1.8.7/lib:/nix/store/4h8fdzphi2wz2nny12ab380a5yvbnlhz-libXcursor-1.2.1/lib:/nix/store/0715psj2g6rwmpnhfgvin5fr33041a53-libXi-1.8.1/lib:/nix/store/pdgavpdmzfwf90k46ybca08bwlc3hzdc-wayland-1.22.0/lib:/nix/store/5n1i2i9bxzl86c3c3z0q3ldb4mwf4kb4-wayland-protocols-1.32/lib'
+exec -a "$0" "/nix/store/s6xdb8mzbhwkl80m70k4jpn9a6r2wyq8-gui-gpu-0.1.0/bin/.gui-gpu-wrapped"  "$@" 

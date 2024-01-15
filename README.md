@@ -7,13 +7,13 @@
 
 ## Screenshots
 
-![Mandelbrot](/screenshot/mandelbrot.png)
-![Multibrot](/screenshot/multibrot.png)
+![Mandelbrot](./screenshot/mandelbrot.png)
+![Multibrot](./screenshot/multibrot.png)
 
 ## How to
 
-- Try the [live demo](https://shapur1234.github.io/Fractl/) (Note: the web version runs on a signle thread withou GPU acceleration, native version are much faster)
-- Download a binary from releases (TODO)
+- Try the [live demo](https://shapur1234.github.io/Fractl/) (Note: the web version runs on a signle thread without GPU acceleration, native version are much faster)
+- Download a pre-build binary from [`./bin`](./bin)
 - Install using cargo (TODO)
 
 ### Controls
@@ -60,6 +60,8 @@
 - To build: `nix build .#Package`
 - To build and run locally: `nix run .#Package`
 - Example: `nix run .#gui-gpu`
+
+- Or use on of the build scripts in [./script]
 
 ### Building using cargo
 
