@@ -13,7 +13,7 @@
 ## How to
 
 - Try the [live demo](https://shapur1234.github.io/Fractl/) (Note: the web version runs on a signle thread without GPU acceleration, native version are much faster)
-- Download a pre-build binary from [`./bin`](./bin)
+- Download a pre-build binary from [./bin](./bin)
 - Install using cargo (TODO)
 
 ### Controls
@@ -61,7 +61,7 @@
 - To build and run locally: `nix run .#Package`
 - Example: `nix run .#gui-gpu`
 
-- Or use on of the build scripts in [./script]
+- Or use on of the build scripts in [./script](./script)
 
 ### Building using cargo
 
