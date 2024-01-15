@@ -1,4 +1,4 @@
-# Fractl
+# [Fractl](https://shapur1234.github.io/Fractl/)
 
 - Fractal renderer written in rust
 - Singlethreaded, multithreading (using [rayon](https://github.com/rayon-rs/rayon)) and gpu compute (using [wgpu](https://github.com/gfx-rs/wgpu) - [WebGpu](https://developer.mozilla.org/en-US/docs/Web/API/WebGPU_API) implementation) versions
@@ -12,6 +12,7 @@
 
 ## How to
 
+- Try the [live demo](https://shapur1234.github.io/Fractl/) (Note: the web version runs on a signle thread withou GPU acceleration, native version are much faster)
 - Download a binary from releases (TODO)
 - Install using cargo (TODO)
 
