@@ -1,8 +1,8 @@
 [workspace]
 resolver = "2"
 members = [
-  "lib",
-  "fractl-gui",
+  "fractl_lib",
+  "fractl_gui",
 ]
 
 [workspace.package]
@@ -17,7 +17,7 @@ keywords = [ "fractal", "rendering", "gpu", "pararellism", "wasm" ]
 categories = [ "rendering", "mathematics", "graphics", "multimedia::images", "web-programming" ]
 
 [workspace.dependencies]
-lib = { path = "./lib" }
+fractl_lib = { path = "fractl_lib", version = "0.1" }
 
 [profile.release]
 lto = true

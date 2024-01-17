@@ -49,13 +49,13 @@
 
 | Package                    | Description                               | Pararelism         | Floatin point percision |
 | -------------------------- | ----------------------------------------- | ------------------ | ----------------------- |
-| fractl-gui                 | Native gui                                | No                 | Double (f64)            |
-| fractl-gui-multithread     | Native gui                                | CPU multithreading | Double (f64)            |
-| fractl-gui-gpu             | Native gui                                | GPU compute shader | Single (f32)            |
-| fractl-gui-wasm            | Web gui                                   | No                 | Double (f64)            |
-| fractl-gui-win             | Native gui crosscompiled to Winows x86_64 | No                 | Double (f64)            |
-| fractl-gui-win-multithread | Native gui crosscompiled to Winows x86_64 | CPU multithreading | Double (f64)            |
-| fractl-gui-win-gpu         | Native gui crosscompiled to Winows x86_64 | GPU compute shader | Single (f32)            |
+| fractl_gui                 | Native gui                                | No                 | Double (f64)            |
+| fractl_gui-multithread     | Native gui                                | CPU multithreading | Double (f64)            |
+| fractl_gui-gpu             | Native gui                                | GPU compute shader | Single (f32)            |
+| fractl_gui-wasm            | Web gui                                   | No                 | Double (f64)            |
+| fractl_gui-win             | Native gui crosscompiled to Winows x86_64 | No                 | Double (f64)            |
+| fractl_gui-win-multithread | Native gui crosscompiled to Winows x86_64 | CPU multithreading | Double (f64)            |
+| fractl_gui-win-gpu         | Native gui crosscompiled to Winows x86_64 | GPU compute shader | Single (f32)            |
 
 - To build: `nix build .#Package`
 - To build and run locally: `nix run .#Package`
@@ -75,9 +75,9 @@
 | f32        | Single percision floating point numbers | _f32_ and _f64_ cannot be enabled at the same time                          |
 | f64        | Double percision floating point numbers | _f32_ and _f64_ cannot be enabled at the same time                          |
 
-- To build: `cargo build --package=fractl-gui --no-default-features --release --features "Feature1 Feature2"`
-- To run: `cargo run --package=fractl-gui --no-default-features --release --features "Feature1 Feature2"`
-- Example: `cargo build --package=fractl-gui --no-default-features --release --features "gpu f32"`
+- To build: `cargo build --package=fractl_gui --no-default-features --release --features "Feature1 Feature2"`
+- To run: `cargo run --package=fractl_gui --no-default-features --release --features "Feature1 Feature2"`
+- Example: `cargo build --package=fractl_gui --no-default-features --release --features "gpu f32"`
 
 ## TODO
 
