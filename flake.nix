@@ -72,7 +72,7 @@
           inherit src;
           strictDeps = true;
 
-          pname = "gui";
+          pname = "fractl-gui";
           version = "0.1.0";
 
           buildInputs = [
@@ -82,8 +82,8 @@
         };
 
         singlethreadArgs = commonArgs // {
-          pname = "gui";
-          cargoExtraArgs = ''--package=gui --no-default-features --features "f64"'';
+          pname = "fractl-gui";
+          cargoExtraArgs = ''--package=fractl-gui --no-default-features --features "f64"'';
 
           buildInputs = [
             runtimeLibs
@@ -95,8 +95,8 @@
           inherit LD_LIBRARY_PATH;
         };
         multithreadArgs = commonArgs // {
-          pname = "gui-multithread";
-          cargoExtraArgs = ''--package=gui --no-default-features --features "multithread f64"'';
+          pname = "fractl-gui-multithread";
+          cargoExtraArgs = ''--package=fractl-gui --no-default-features --features "multithread f64"'';
 
           buildInputs = [
             runtimeLibs
@@ -108,8 +108,8 @@
           inherit LD_LIBRARY_PATH;
         };
         gpuArgs = commonArgs // {
-          pname = "gui-gpu";
-          cargoExtraArgs = ''--package=gui --no-default-features --features "gpu f32"'';
+          pname = "fractl-gui-gpu";
+          cargoExtraArgs = ''--package=fractl-gui --no-default-features --features "gpu f32"'';
 
           buildInputs = [
             runtimeLibs
@@ -121,10 +121,10 @@
           inherit LD_LIBRARY_PATH;
         };
         wasmArgs = commonArgs // {
-          pname = "gui-wasm";
-          cargoExtraArgs = ''--package=gui'';
+          pname = "fractl-gui-wasm";
+          cargoExtraArgs = ''--package=fractl-gui'';
 
-          trunkIndexPath = "gui/index.html";
+          trunkIndexPath = "fractl-gui/index.html";
 
           CARGO_BUILD_TARGET = "wasm32-unknown-unknown";
 
@@ -144,23 +144,23 @@
           cargoArtifacts = singlethreadCargoArtifacts;
 
           postInstall = ''
-            wrapProgram "$out/bin/gui" --set LD_LIBRARY_PATH ${LD_LIBRARY_PATH};
+            wrapProgram "$out/bin/fractl-gui" --set LD_LIBRARY_PATH ${LD_LIBRARY_PATH};
           '';
         });
         multithreadCrate = craneLib.buildPackage (multithreadArgs // {
           cargoArtifacts = multithreadCargoArtifacts;
 
           postInstall = ''
-            mv $out/bin/gui $out/bin/gui-multithread
-            wrapProgram "$out/bin/gui-multithread" --set LD_LIBRARY_PATH ${LD_LIBRARY_PATH};
+            mv $out/bin/fractl-gui $out/bin/fractl-gui-multithread
+            wrapProgram "$out/bin/fractl-gui-multithread" --set LD_LIBRARY_PATH ${LD_LIBRARY_PATH};
           '';
         });
         gpuCrate = craneLib.buildPackage (gpuArgs // {
           cargoArtifacts = gpuCargoArtifacts;
 
           postInstall = ''
-            mv $out/bin/gui $out/bin/gui-gpu
-            wrapProgram "$out/bin/gui-gpu" --set LD_LIBRARY_PATH ${LD_LIBRARY_PATH};
+            mv $out/bin/fractl-gui $out/bin/fractl-gui-gpu
+            wrapProgram "$out/bin/fractl-gui-gpu" --set LD_LIBRARY_PATH ${LD_LIBRARY_PATH};
           '';
         });
 
@@ -189,7 +189,7 @@
             "-L native=${pkgs.pkgsCross.mingwW64.windows.pthreads}/lib";
 
           postInstall = ''
-            mv $out/bin/gui.exe $out/bin/gui-multithread.exe
+            mv $out/bin/fractl-gui.exe $out/bin/fractl-gui-multithread.exe
           '';
         });
         gpuWinCrate = craneLib.buildPackage (gpuArgs // {
@@ -205,7 +205,7 @@
             "-L native=${pkgs.pkgsCross.mingwW64.windows.pthreads}/lib";
 
           postInstall = ''
-            mv $out/bin/gui.exe $out/bin/gui-gpu.exe
+            mv $out/bin/fractl-gui.exe $out/bin/fractl-gui-gpu.exe
           '';
         });
 
@@ -213,7 +213,7 @@
           cargoArtifacts = wasmCargoArtifacts;
         });
 
-        serveWasm = pkgs.writeShellScriptBin "gui-wasm" ''
+        serveWasm = pkgs.writeShellScriptBin "fractl-gui-wasm" ''
           ${pkgs.python3Minimal}/bin/python3 -m http.server --directory ${wasmCrate} 8000
         '';
 
@@ -250,30 +250,30 @@
         };
 
         packages = {
-          gui = singlethreadCrate;
-          gui-multithread = multithreadCrate;
-          gui-gpu = gpuCrate;
-          gui-win = singlethreadWinCrate;
-          gui-win-multithread = multithreadWinCrate;
-          gui-win-gpu = gpuWinCrate;
-          gui-wasm = wasmCrate;
+          fractl-gui = singlethreadCrate;
+          fractl-gui-multithread = multithreadCrate;
+          fractl-gui-gpu = gpuCrate;
+          fractl-gui-win = singlethreadWinCrate;
+          fractl-gui-win-multithread = multithreadWinCrate;
+          fractl-gui-win-gpu = gpuWinCrate;
+          fractl-gui-wasm = wasmCrate;
         };
 
         apps = {
-          gui = flake-utils.lib.mkApp {
-            name = "gui";
+          fractl-gui = flake-utils.lib.mkApp {
+            name = "fractl-gui";
             drv = singlethreadCrate;
           };
-          gui-multithread = flake-utils.lib.mkApp {
-            name = "gui-multithread";
+          fractl-gui-multithread = flake-utils.lib.mkApp {
+            name = "fractl-gui-multithread";
             drv = multithreadCrate;
           };
-          gui-gpu = flake-utils.lib.mkApp {
-            name = "gui-gpu";
+          fractl-gui-gpu = flake-utils.lib.mkApp {
+            name = "fractl-gui-gpu";
             drv = gpuCrate;
           };
-          gui-wasm = flake-utils.lib.mkApp {
-            name = "gui-wasm";
+          fractl-gui-wasm = flake-utils.lib.mkApp {
+            name = "fractl-gui-wasm";
             drv = serveWasm;
           };
         };

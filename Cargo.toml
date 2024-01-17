@@ -2,8 +2,22 @@
 resolver = "2"
 members = [
   "lib",
-  "gui",
+  "fractl-gui",
 ]
+
+[workspace.package]
+version = "0.1.0"
+description = " Fractal renderer supporting multithreading, gpu compute and wasm "
+edition = "2021"
+authors = ["Shapur <48966182+Shapur1234@users.noreply.github.com>"]
+license = "GPL-3.0-or-later"
+repository = "https://github.com/Shapur1234/Fractaller"
+readme = "README.md"
+keywords = [ "fractal", "rendering", "gpu", "pararellism", "wasm" ]
+categories = [ "rendering", "mathematics", "graphics", "multimedia::images", "web-programming" ]
+
+[workspace.dependencies]
+lib = { path = "./lib" }
 
 [profile.release]
 lto = true

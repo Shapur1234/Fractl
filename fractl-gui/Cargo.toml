@@ -1,0 +1,34 @@
+[package]
+name = "fractl-gui"
+version.workspace = true
+description.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+readme.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[features]
+default = [ "f64" ]
+gpu = [ "lib/gpu" ]
+multithread = [ "lib/multithread" ]
+f32 = [ "lib/f32" ]
+f64 = [ "lib/f64" ]
+
+[dependencies]
+lib = { features = [ "winit" ], workspace = true }
+cfg-if = "1.0"
+cgmath = "0.18"
+softbuffer = "0.4"
+winit = "0.29"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+instant = "0.1"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+console_error_panic_hook = "0.1"
+instant = { version = "0.1", features = [ "wasm-bindgen" ] }
+wasm-bindgen = "0.2"
+web-sys = { version ="0.3", features = [ "HtmlCollection" ] }
