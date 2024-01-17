@@ -17,7 +17,7 @@ keywords = [ "fractal", "rendering", "gpu", "pararellism", "wasm" ]
 categories = [ "rendering", "mathematics", "graphics", "multimedia::images", "web-programming" ]
 
 [workspace.dependencies]
-fractl_lib = { path = "fractl_lib", version = "0.1" }
+fractl_lib = { path = "fractl_lib", version = "0.1", default-features = false }
 
 [profile.release]
 lto = true

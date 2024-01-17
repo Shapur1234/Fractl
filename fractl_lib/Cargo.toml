@@ -11,6 +11,7 @@ keywords.workspace = true
 categories.workspace = true
 
 [features]
+default = [ "f64" ]
 multithread = [ "dep:rayon" ]
 gpu = [ "dep:bytemuck", "bytemuck/derive", "dep:flume", "dep:pollster", "dep:wgpu" ]
 f32 = [ ]
