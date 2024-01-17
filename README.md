@@ -14,7 +14,7 @@
 
 - Try the [live demo](https://shapur1234.github.io/Fractl/) (Note: the web version runs on a signle thread without GPU acceleration, native version are much faster)
 - Download a pre-build binary from [./bin](./bin)
-- Install using cargo (TODO)
+- Run `cargo install fractl_gui` to install, optionally pick specific features (see "Building using cargo")
 
 ### Controls
 
