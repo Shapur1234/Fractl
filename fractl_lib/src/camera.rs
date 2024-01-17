@@ -17,9 +17,13 @@ pub struct Camera {
 }
 
 impl Camera {
+    #[allow(dead_code)]
     const MOVE_INCREMENT: Float = 0.005;
+    #[allow(dead_code)]
     const ZOOM_INCREMENT: Float = 0.02;
+    #[allow(dead_code)]
     const MIN_ZOOM: Float = 0.1;
+    #[allow(dead_code)]
     const MAX_ZOOM: Float = Float::MAX;
 
     #[must_use]
