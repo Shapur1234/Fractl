@@ -82,6 +82,6 @@
 ## TODO
 
 - Add Julia set, more fractals
+- F128 floating point
 - Wasm WebGpu with compute shader
 - Redox port
-- Publish to crates.io
