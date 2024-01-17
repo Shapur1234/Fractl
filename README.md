@@ -79,6 +79,11 @@
 - To run: `cargo run --package=fractl_gui --no-default-features --release --features "Feature1 Feature2"`
 - Example: `cargo build --package=fractl_gui --no-default-features --release --features "gpu f32"`
 
+## Links
+
+- Source repo - [https://github.com/Shapur1234/Fractl](https://github.com/Shapur1234/Fractl)
+- Crates.io - [https://crates.io/crates/fractl_gui](https://crates.io/crates/fractl_gui)
+
 ## TODO
 
 - Add Julia set, more fractals
