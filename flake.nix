@@ -4,8 +4,9 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
-    # The version of wasm-bindgen-cli needs to match the version in Cargo.lock
-    nixpkgs-for-wasm-bindgen.url = "github:NixOS/nixpkgs/75c13bf6aac049d5fec26c07c28389a72c25a30b";
+
+    # wasm-bindgen-cli 0.2.91
+    nixpkgs-for-wasm-bindgen.url = "github:NixOS/nixpkgs/38513315386e828b9d296805657726e63e338076";
 
     crane = {
       url = "github:ipetkov/crane";
@@ -129,7 +130,7 @@
           CARGO_BUILD_TARGET = "wasm32-unknown-unknown";
 
           wasm-bindgen-cli = pkgs.wasm-bindgen-cli.override {
-            version = "0.2.89";
+            version = "0.2.91";
           };
         };
 
