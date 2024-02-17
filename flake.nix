@@ -208,12 +208,11 @@
             mv $out/bin/fractl_gui.exe $out/bin/fractl_gui-gpu.exe
           '';
         });
-
         wasmCrate = craneLib.buildTrunkPackage (wasmArgs // {
           cargoArtifacts = wasmCargoArtifacts;
         });
 
-        serveWasm = pkgs.writeShellScriptBin "fractl_gui-wasm" ''
+        serveWasm = pkgs.writeShellScriptBin "${wasmArgs.pname}" ''
           ${pkgs.python3Minimal}/bin/python3 -m http.server --directory ${wasmCrate} 8000
         '';
 
